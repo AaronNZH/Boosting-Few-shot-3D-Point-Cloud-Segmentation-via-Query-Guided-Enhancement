@@ -96,6 +96,7 @@ class MultiPrototypeTransductiveInference(nn.Module):
             bg_prototypes = bg_prototypes.unsqueeze(0)
             fg_prototypes = fg_prototypes.unsqueeze(0)
             query_feat = query_feat.unsqueeze(0)
+            
             cross_bg_prototypes1 = self.cross_align([bg_prototypes, query_feat, query_feat])
             cross_bg_prototypes2 = self.cross_align([bg_prototypes, fg_prototypes, fg_prototypes])
             cross_bg_prototypes3 = cross_bg_prototypes1 - cross_bg_prototypes2
@@ -110,44 +111,30 @@ class MultiPrototypeTransductiveInference(nn.Module):
         else:
             prototypes = fg_prototypes
             prototype_labels = fg_labels
-
-        # # construct label matrix Y, with Y_ij = 1 if x_i is from the support set and labeled as y_i = j, otherwise Y_ij = 0.
-        # self.num_nodes = self.num_prototypes + query_feat.shape[0] # number of node of partial observed graph
-        # Y = torch.zeros(self.num_nodes, self.n_classes).cuda()
-        # Y[:self.num_prototypes] = prototype_labels
-        #
-        # # construct feat matrix F
-        # node_feat = torch.cat((prototypes, query_feat), dim=0) #(num_nodes, feat_dim)
-        #
-        # # label propagation
-        # A = self.calculateLocalConstrainedAffinity(node_feat, k=self.k_connect)
-        # Z = self.label_propagate(A, Y) #(num_nodes, n_way+1)
-        #
-        # query_pred = Z[self.num_prototypes:, :] #(n_queries*num_points, n_way+1)
-        # query_pred = query_pred.view(-1, query_y.shape[1], self.n_classes).transpose(1,2) #(n_queries, n_way+1, num_points)
+        
         query_pred = self.get_pred(prototypes, prototype_labels, query_feat)
         loss = self.computeCrossEntropyLoss(query_pred, query_y)
         
-        # if use_teacher:
-        #     query_feat_for_teacher = query_feat_for_teacher.unsqueeze(1)
-        #     query_fg_mask = query_y.unsqueeze(1)
-        #     query_bg_mask = torch.logical_not(query_fg_mask)
-        #     query_fg_proto, query_fg_labels = self.getForegroundPrototypes(query_feat_for_teacher, query_fg_mask, k=self.n_subprototypes)
-        #     query_bg_proto, query_bg_labels = self.getBackgroundPrototypes(query_feat_for_teacher, query_bg_mask, k=self.n_subprototypes)
-        #
-        #     # prototype learning
-        #     if query_bg_proto is not None and query_bg_labels is not None:
-        #         prototypes = torch.cat((query_bg_proto, query_fg_proto), dim=0)  # (*, feat_dim)
-        #         prototype_labels = torch.cat((query_bg_labels, query_fg_labels), dim=0)  # (*,n_classes)
-        #     else:
-        #         prototypes = query_fg_proto
-        #         prototype_labels = query_fg_labels
-        #
-        #     teacher_pred = self.get_pred(prototypes, prototype_labels, query_feat)
-        #
-        #     teacher_pred_loss = self.computeCrossEntropyLoss(teacher_pred, query_y)
-        #     distill_loss = self.get_distill_loss(teacher_pred, query_pred, query_y, tau=5)
-        #     loss = loss + 0.5 * teacher_pred_loss + 0.5 * distill_loss
+        if use_teacher:
+            query_feat_for_teacher = query_feat_for_teacher.unsqueeze(1)
+            query_fg_mask = query_y.unsqueeze(1)
+            query_bg_mask = torch.logical_not(query_fg_mask)
+            query_fg_proto, query_fg_labels = self.getForegroundPrototypes(query_feat_for_teacher, query_fg_mask, k=self.n_subprototypes)
+            query_bg_proto, query_bg_labels = self.getBackgroundPrototypes(query_feat_for_teacher, query_bg_mask, k=self.n_subprototypes)
+
+            # prototype learning
+            if query_bg_proto is not None and query_bg_labels is not None:
+                prototypes = torch.cat((query_bg_proto, query_fg_proto), dim=0)  # (*, feat_dim)
+                prototype_labels = torch.cat((query_bg_labels, query_fg_labels), dim=0)  # (*,n_classes)
+            else:
+                prototypes = query_fg_proto
+                prototype_labels = query_fg_labels
+            
+            teacher_pred = self.get_pred(prototypes, prototype_labels, query_feat)
+
+            teacher_pred_loss = self.computeCrossEntropyLoss(teacher_pred, query_y)
+            distill_loss = self.get_distill_loss(teacher_pred, query_pred, query_y, tau=1)
+            loss = loss + teacher_pred_loss + distill_loss
 
         return query_pred, loss
 
@@ -260,7 +247,7 @@ class MultiPrototypeTransductiveInference(nn.Module):
         else:
             return None, None
 
-    def calculateLocalConstrainedAffinity(self, node_feat, k=200, method='gaussian'):
+        def calculateLocalConstrainedAffinity(self, node_feat, k=200, method='gaussian'):
         """
         Calculate the Affinity matrix of the nearest neighbor graph constructed by prototypes and query points,
         It is a efficient way when the number of nodes in the graph is too large.
@@ -339,7 +326,6 @@ class MultiPrototypeTransductiveInference(nn.Module):
 
         query_pred = Z[num_prototypes:, :]  # (n_queries*num_points, n_way+1)
         query_pred = query_pred.view(-1, self.n_points, self.n_classes).transpose(1, 2)  # (n_queries, n_way+1, num_points)
-
         return query_pred
 
     def get_distill_loss(self, teacher_pred, student_pred, gt, tau=5):
@@ -352,15 +338,12 @@ class MultiPrototypeTransductiveInference(nn.Module):
         loss = 0.
         teacher_pred = torch.softmax(teacher_pred * tau, dim=1)
         student_pred = torch.log_softmax(student_pred * tau, dim=1)
-        # student_pred = torch.softmax(student_pred * tao, dim=1)
         gt = gt.unsqueeze(1)  # [b, 1, n]
         cross_entropy = -1 * torch.mul(teacher_pred, student_pred)  # [b, c, n]
-        # kl_diversion = torch.mul(teacher_pred, torch.log(teacher_pred / (student_pred + 1e-12)))
 
         for i in range(self.n_classes):
             mask = torch.eq(gt, i)
             cur_loss = (cross_entropy * mask).sum() / (mask.sum() + 1e-12)
-            # cur_loss = (kl_diversion * mask).sum() / (mask.sum() + 1e-12)
             loss = loss + cur_loss
 
         return loss / self.n_classes
