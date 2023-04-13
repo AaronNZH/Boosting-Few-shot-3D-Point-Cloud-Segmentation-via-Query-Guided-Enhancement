@@ -23,16 +23,18 @@ class MPTILearner(object):
         if mode=='train':
             if args.use_attention:
                 self.optimizer = torch.optim.Adam(
-                    [{'params': self.model.encoder.parameters(), 'lr': 0.0001},
+                    [{'params': self.model.encoder.parameters(), 'lr': 1e-4},
                      {'params': self.model.base_learner.parameters()},
-                     {'params': self.model.cross_align.parameters(), 'lr': 0.0005},
-                     {'params': self.model.att_learner.parameters()}], lr=args.lr)
+                     {'params': self.model.att_learner.parameters()},
+                     {'params': self.model.cross_align.parameters(), 'lr': 5e-4}
+                    ], lr=args.lr)
             else:
                 self.optimizer = torch.optim.Adam(
-                    [{'params': self.model.encoder.parameters(), 'lr': 0.0001},
+                    [{'params': self.model.encoder.parameters(), 'lr':1e-4},
                      {'params': self.model.base_learner.parameters()},
-                     {'params': self.model.cross_align.parameters(), 'lr': 0.0005},
-                     {'params': self.model.linear_mapper.parameters()}], lr=args.lr)
+                     {'params': self.model.linear_mapper.parameters()},
+                     {'params': self.model.cross_align.parameters(), 'lr': 5e-4}
+                    ], lr=args.lr)
             #set learning rate scheduler
             self.lr_scheduler = optim.lr_scheduler.StepLR(self.optimizer, step_size=args.step_size,
                                                           gamma=args.gamma)
