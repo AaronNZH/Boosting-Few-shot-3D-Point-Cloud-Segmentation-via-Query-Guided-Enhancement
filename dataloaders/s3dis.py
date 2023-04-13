@@ -45,7 +45,7 @@ class S3DISDataset(object):
             min_pts = 100  # to filter out scans with only rare labelled points
             class2scans = {k:[] for k in range(self.classes)}
 
-            for file in glob.glob(os.path.join(self.data_path, 'data', '*.npy')):
+            for file in glob.glob(os.path.join(self.data_path, 'scenes', 'data', '*.npy')):
                 scan_name = os.path.basename(file)[:-4]
                 data = np.load(file)
                 labels = data[:,6].astype(np.int_)
