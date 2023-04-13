@@ -35,7 +35,7 @@ def sample_K_pointclouds(data_path, num_point, pc_attribs, pc_augm, pc_augm_conf
 def sample_pointcloud(data_path, num_point, pc_attribs, pc_augm, pc_augm_config, scan_name,
                       sampled_classes, sampled_class=0, support=False, random_sample=False):
     sampled_classes = list(sampled_classes)
-    data = np.load(os.path.join(data_path, 'data', '%s.npy' % scan_name))
+    data = np.load(os.path.join(data_path, 'scenes', 'data', '%s.npy' % scan_name))
     N = data.shape[0]  # number of points in this scan
 
     if random_sample:
@@ -115,7 +115,7 @@ def augment_pointcloud(P, pc_augm_config):
 
 
 class MyDataset(Dataset):
-    def __init__(self, data_path, dataset_name, cvfold=0, num_episode=50000, n_way=3, k_shot=5, n_queries=1,
+    def __init__(self, data_path, dataset_name, cvfold=0, num_episode=40000, n_way=2, k_shot=1, n_queries=1,
                  phase=None, mode='train', num_point=4096, pc_attribs='xyz', pc_augm=False, pc_augm_config=None):
         super(MyDataset).__init__()
         self.data_path = data_path
