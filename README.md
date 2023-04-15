@@ -5,6 +5,9 @@
 - Install `python` --This repo is tested with `python 3.10.8`.
 - Install `pytorch` with CUDA -- This repo is tested with `torch 1.13.1`, `CUDA 11.7`. 
 It may work with newer versions, but that is not gauranteed.
+	```
+	conda install pytorch==1.13.1 pytorch-cuda=11.7 -c pytorch -c nvidia
+	```
 - Install `faiss` with cpu version
 	```
 	pip install faiss-cpu
