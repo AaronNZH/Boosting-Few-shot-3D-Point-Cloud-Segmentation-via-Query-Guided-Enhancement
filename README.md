@@ -12,7 +12,7 @@ It may work with newer versions, but that is not gauranteed.
 	```
 	pip install faiss-cpu
 	```
-- Install 'torch-cluster' with the corrreponding torch and cuda version
+- Install 'torch-cluster' with the corrreponding torch and cuda version, and it will take a few minutes
 	```
 	pip install torch-cluster
 	```
