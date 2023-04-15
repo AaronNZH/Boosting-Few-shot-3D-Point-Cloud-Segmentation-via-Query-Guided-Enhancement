@@ -72,12 +72,6 @@ if __name__ == '__main__':
     parser.add_argument('--pc_augm_jitter', type=int, default=1,
                         help='Training augmentation: Bool, Gaussian jittering of all attributes')
 
-    # MyKPConv
-    parser.add_argument('--kernel_size', type=int, default=7)
-    parser.add_argument('--radius', type=float, default=10)
-    parser.add_argument('--kpconv_sigma', type=float, default=6)
-    parser.add_argument('--neighbors_limit', type=int, default=40)
-
     # feature extraction network configuration
     parser.add_argument('--dgcnn_k', type=int, default=20, help='Number of nearest neighbors in Edgeconv')
     parser.add_argument('--edgeconv_widths', default='[[64,64], [64,64], [64, 64]]', help='DGCNN Edgeconv widths')
@@ -89,7 +83,7 @@ if __name__ == '__main__':
     parser.add_argument('--use_attention', action='store_true', help='if incorporate attention learner')
 
     # protoNet configuration
-    parser.add_argument('--dist_method', default='euclidean',
+    parser.add_argument('--dist_method', default='gaussian',
                         help='Method to compute distance between query feature maps and prototypes.[Option: cosine|euclidean]')
     # MPTI configuration
     parser.add_argument('--n_subprototypes', type=int, default=100,
