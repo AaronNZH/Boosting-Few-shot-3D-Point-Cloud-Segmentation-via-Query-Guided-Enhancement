@@ -2,7 +2,7 @@
 3D Few-Shot Semantic Segmentation
 
 ## Installation
-- Install `python` --This repo is tested with `python 3.10.8`.
+- Install `python` --This repo is tested with `python 3.10`.
 - Install `pytorch` with CUDA -- This repo is tested with `torch 1.13.1`, `CUDA 11.7`. 
 It may work with newer versions, but that is not gauranteed.
 	```
