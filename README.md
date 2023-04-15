@@ -68,7 +68,7 @@ Second, train our method:
     
     bash ./scripts/eval_attMPTI.sh
 
-Note that the above scripts are used for 2-way 1-shot on S3DIS (S^0). You can modified the corresponding hyperparameters to conduct experiments on other settings. 
+Note that the above scripts are used for 2-way 1-shot on S3DIS (S0). You can modified the corresponding hyperparameters to conduct experiments on other settings. 
 
 
 
