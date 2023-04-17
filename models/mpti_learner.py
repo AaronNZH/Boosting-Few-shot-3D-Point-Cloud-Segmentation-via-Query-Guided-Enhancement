@@ -20,22 +20,16 @@ class MPTILearner(object):
         if torch.cuda.is_available():
             self.model.cuda()
 
-        if mode=='train':
-            if args.use_attention:
-                self.optimizer = torch.optim.Adam(
-                    [{'params': self.model.encoder.parameters(), 'lr': 1e-4},
-                     {'params': self.model.base_learner.parameters()},
-                     {'params': self.model.att_learner.parameters()},
-                     {'params': self.model.cross_align.parameters(), 'lr': 5e-4}
-                    ], lr=args.lr)
-            else:
-                self.optimizer = torch.optim.Adam(
-                    [{'params': self.model.encoder.parameters(), 'lr':1e-4},
-                     {'params': self.model.base_learner.parameters()},
-                     {'params': self.model.linear_mapper.parameters()},
-                     {'params': self.model.cross_align.parameters(), 'lr': 5e-4}
-                    ], lr=args.lr)
-            #set learning rate scheduler
+        if mode == 'train':
+            self.optimizer = torch.optim.Adam([
+                {'params': self.model.encoder.parameters(), 'lr': 1e-4},
+                {'params': self.model.base_learner.parameters()},
+                {'params': self.model.att_learner.parameters()},
+                {'params': self.model.cross_align.parameters(), 'lr': 1e-3},
+                {'params': self.model.bg_proj.parameters()}
+            ], lr=args.lr)
+
+            # set learning rate scheduler
             self.lr_scheduler = optim.lr_scheduler.StepLR(self.optimizer, step_size=args.step_size,
                                                           gamma=args.gamma)
             if args.model_checkpoint_path is None:
@@ -45,11 +39,11 @@ class MPTILearner(object):
                 # resume from model checkpoint
                 self.model, self.optimizer = load_model_checkpoint(self.model, args.model_checkpoint_path,
                                                                    optimizer=self.optimizer, mode='train')
-        elif mode=='test':
+        elif mode == 'test':
             # Load model checkpoint
             self.model = load_model_checkpoint(self.model, args.model_checkpoint_path, mode='test')
         else:
-            raise ValueError('Wrong GraphLearner mode (%s)! Option:train/test' %mode)
+            raise ValueError('Wrong GraphLearner mode (%s)! Option:train/test' % mode)
 
     def train(self, data):
         """
@@ -64,7 +58,7 @@ class MPTILearner(object):
         [support_x, support_y, query_x, query_y] = data
         self.model.train()
 
-        query_logits, loss = self.model(support_x, support_y, query_x, query_y, use_teacher=True)
+        query_logits, loss = self.model(support_x, support_y, query_x, query_y, is_training=True, use_teacher=True)
 
         self.optimizer.zero_grad()
         loss.backward()
@@ -74,10 +68,9 @@ class MPTILearner(object):
 
         query_pred = F.softmax(query_logits, dim=1).argmax(dim=1)
         correct = torch.eq(query_pred, query_y).sum().item()  # including background class
-        accuracy = correct / (query_y.shape[0]*query_y.shape[1])
+        accuracy = correct / (query_y.shape[0] * query_y.shape[1])
 
         return loss, accuracy
-
 
     def test(self, data):
         """
@@ -91,9 +84,9 @@ class MPTILearner(object):
         self.model.eval()
 
         with torch.no_grad():
-            logits, loss= self.model(support_x, support_y, query_x, query_y)
+            logits, loss = self.model(support_x, support_y, query_x, query_y)
             pred = F.softmax(logits, dim=1).argmax(dim=1)
             correct = torch.eq(pred, query_y).sum().item()
-            accuracy = correct / (query_y.shape[0]*query_y.shape[1])
+            accuracy = correct / (query_y.shape[0] * query_y.shape[1])
 
         return pred, loss, accuracy
