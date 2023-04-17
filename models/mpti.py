@@ -49,6 +49,7 @@ class MultiPrototypeTransductiveInference(nn.Module):
         self.n_points = args.pc_npts
         self.use_attention = args.use_attention
         self.n_subprototypes = args.n_subprototypes
+        self.teacher_n_subprototypes = args.n_teacher_subprototypes
         self.k_connect = args.k_connect
         self.sigma = args.mpti_sigma
 
@@ -56,18 +57,20 @@ class MultiPrototypeTransductiveInference(nn.Module):
 
         self.encoder = DGCNN(args.edgeconv_widths, args.dgcnn_mlp_widths, args.pc_in_dim, k=args.dgcnn_k)
         self.base_learner = BaseLearner(args.dgcnn_mlp_widths[-1], args.base_widths)
-
-        if self.use_attention:
-            self.att_learner = SelfAttention(args.dgcnn_mlp_widths[-1], args.output_dim)
-        else:
-            self.linear_mapper = nn.Conv1d(args.dgcnn_mlp_widths[-1], args.output_dim, 1, bias=False)
+        self.att_learner = SelfAttention(args.dgcnn_mlp_widths[-1], args.output_dim)
 
         self.feat_dim = args.edgeconv_widths[0][-1] + args.output_dim + args.base_widths[-1]
-        
+
         self.cross_align = MultiHeadAttention(in_channel=self.feat_dim, out_channel=self.feat_dim, n_heads=3,
                                               att_dropout=args.dropout_ratio, use_proj=True, use_ffn=False)
 
-    def forward(self, support_x, support_y, query_x, query_y, use_teacher=False):
+        self.bg_proj = nn.Sequential(nn.Linear(self.feat_dim, self.feat_dim // 2),
+                                     nn.LayerNorm(self.feat_dim // 2),
+                                     nn.ReLU(inplace=True),
+                                     nn.Linear(self.feat_dim // 2, self.feat_dim),
+                                     nn.Sigmoid())
+
+    def forward(self, support_x, support_y, query_x, query_y, is_training=False, use_teacher=False):
         """
         Args:
             support_x: support point clouds with shape (n_way, k_shot, in_channels, num_points)
@@ -81,10 +84,29 @@ class MultiPrototypeTransductiveInference(nn.Module):
         support_feat = self.getFeatures(support_x)
         support_feat = support_feat.view(self.n_way, self.k_shot, self.feat_dim, self.n_points)
         query_feat = self.getFeatures(query_x) #(n_queries, feat_dim, num_points)
-        if use_teacher:
-            query_feat_for_teacher = query_feat.clone()
-        query_feat = query_feat.transpose(1,2).contiguous().view(-1, self.feat_dim) #(n_queries*num_points, feat_dim)
 
+        # teacher
+        if use_teacher:
+            query_feat_for_teacher = query_feat.unsqueeze(1)
+            query_fg_mask = query_y.unsqueeze(1)
+            query_bg_mask = torch.logical_not(query_fg_mask)
+            query_fg_proto, query_fg_labels = self.getForegroundPrototypes(query_feat_for_teacher, query_fg_mask,
+                                                                           k=self.teacher_n_subprototypes)
+            query_bg_proto, query_bg_labels = self.getBackgroundPrototypes(query_feat_for_teacher, query_bg_mask,
+                                                                           k=self.teacher_n_subprototypes)
+
+            # prototype learning
+            if query_bg_proto is not None and query_bg_labels is not None:
+                prototypes = torch.cat((query_bg_proto, query_fg_proto), dim=0)  # (*, feat_dim)
+                prototype_labels = torch.cat((query_bg_labels, query_fg_labels), dim=0)  # (*,n_classes)
+            else:
+                prototypes = query_fg_proto
+                prototype_labels = query_fg_labels
+
+            query_feat_for_teacher = query_feat_for_teacher.squeeze(1).transpose(1,2).contiguous().view(-1, self.feat_dim)
+            teacher_pred = self.get_pred(prototypes, prototype_labels, query_feat_for_teacher)
+
+        query_feat = query_feat.transpose(1,2).contiguous().view(-1, self.feat_dim) #(n_queries*num_points, feat_dim)
         fg_mask = support_y
         bg_mask = torch.logical_not(support_y)
 
@@ -96,44 +118,28 @@ class MultiPrototypeTransductiveInference(nn.Module):
             bg_prototypes = bg_prototypes.unsqueeze(0)
             fg_prototypes = fg_prototypes.unsqueeze(0)
             query_feat = query_feat.unsqueeze(0)
-            
+
             cross_bg_prototypes1 = self.cross_align([bg_prototypes, query_feat, query_feat])
             cross_bg_prototypes2 = self.cross_align([bg_prototypes, fg_prototypes, fg_prototypes])
-            cross_bg_prototypes3 = cross_bg_prototypes1 - cross_bg_prototypes2
+            cross_bg_prototypes3 = cross_bg_prototypes1 * (1 - torch.sigmoid(self.bg_proj(cross_bg_prototypes2)))
             bg_prototypes = self.cross_align([bg_prototypes, cross_bg_prototypes3, cross_bg_prototypes3])
-            
+
             bg_prototypes = bg_prototypes.squeeze(0)
             fg_prototypes = fg_prototypes.squeeze(0)
             query_feat = query_feat.squeeze(0)
-            
+
             prototypes = torch.cat((bg_prototypes, fg_prototypes), dim=0) #(*, feat_dim)
             prototype_labels = torch.cat((bg_labels, fg_labels), dim=0) #(*, n_classes)
         else:
             prototypes = fg_prototypes
             prototype_labels = fg_labels
-        
+
         query_pred = self.get_pred(prototypes, prototype_labels, query_feat)
         loss = self.computeCrossEntropyLoss(query_pred, query_y)
-        
+
         if use_teacher:
-            query_feat_for_teacher = query_feat_for_teacher.unsqueeze(1)
-            query_fg_mask = query_y.unsqueeze(1)
-            query_bg_mask = torch.logical_not(query_fg_mask)
-            query_fg_proto, query_fg_labels = self.getForegroundPrototypes(query_feat_for_teacher, query_fg_mask, k=self.n_subprototypes)
-            query_bg_proto, query_bg_labels = self.getBackgroundPrototypes(query_feat_for_teacher, query_bg_mask, k=self.n_subprototypes)
-
-            # prototype learning
-            if query_bg_proto is not None and query_bg_labels is not None:
-                prototypes = torch.cat((query_bg_proto, query_fg_proto), dim=0)  # (*, feat_dim)
-                prototype_labels = torch.cat((query_bg_labels, query_fg_labels), dim=0)  # (*,n_classes)
-            else:
-                prototypes = query_fg_proto
-                prototype_labels = query_fg_labels
-            
-            teacher_pred = self.get_pred(prototypes, prototype_labels, query_feat)
-
             teacher_pred_loss = self.computeCrossEntropyLoss(teacher_pred, query_y)
-            distill_loss = self.get_distill_loss(teacher_pred, query_pred, query_y, tau=1)
+            distill_loss = self.get_distill_loss(query_pred, teacher_pred, query_y, tau=1)
             loss = loss + teacher_pred_loss + distill_loss
 
         return query_pred, loss
@@ -144,17 +150,10 @@ class MultiPrototypeTransductiveInference(nn.Module):
         :param x: input data with shape (B, C_in, L)
         :return: features with shape (B, C_out, L)
         """
-        if self.use_attention:
-            feat_level1, feat_level2 = self.encoder(x)
-            feat_level3 = self.base_learner(feat_level2)
-            att_feat = self.att_learner(feat_level2)
-            return torch.cat((feat_level1, att_feat, feat_level3), dim=1)
-        else:
-            # return self.base_learner(self.encoder(x))
-            feat_level1, feat_level2 = self.encoder(x)
-            feat_level3 = self.base_learner(feat_level2)
-            map_feat = self.linear_mapper(feat_level2)
-            return torch.cat((feat_level1, map_feat, feat_level3), dim=1)
+        feat_level1, feat_level2 = self.encoder(x)
+        feat_level3 = self.base_learner(feat_level2)
+        att_feat = self.att_learner(feat_level2)
+        return torch.cat((feat_level1, att_feat, feat_level3), dim=1)
 
     def getMutiplePrototypes(self, feat, k):
         """
@@ -234,7 +233,7 @@ class MultiPrototypeTransductiveInference(nn.Module):
             labels: background prototype labels (one-hot), shape: (k, n_way+1)
         """
         feats = feats.transpose(2,3).contiguous().view(-1, self.feat_dim)
-        index = torch.nonzero(masks.view(-1)).squeeze(1)
+        index = torch.nonzero(masks.reshape(-1)).squeeze(1)
         feat = feats[index]
         # in case this support set does not contain background points..
         if feat.shape[0] != 0:
@@ -247,7 +246,7 @@ class MultiPrototypeTransductiveInference(nn.Module):
         else:
             return None, None
 
-        def calculateLocalConstrainedAffinity(self, node_feat, k=200, method='gaussian'):
+    def calculateLocalConstrainedAffinity(self, node_feat, k=200, method='gaussian'):
         """
         Calculate the Affinity matrix of the nearest neighbor graph constructed by prototypes and query points,
         It is a efficient way when the number of nodes in the graph is too large.
@@ -262,7 +261,6 @@ class MultiPrototypeTransductiveInference(nn.Module):
         """
         # kNN search for the graph
         X = node_feat.detach().cpu().numpy()
-        num_nodes = X.shape[0]
         # build the index with cpu version
         index = faiss.IndexFlatL2(self.feat_dim)
         index.add(X)
@@ -271,7 +269,7 @@ class MultiPrototypeTransductiveInference(nn.Module):
 
         # create the affinity matrix
         knn_idx = I.unsqueeze(2).expand(-1, -1, self.feat_dim).contiguous().view(-1, self.feat_dim)
-        knn_feat = torch.gather(node_feat, dim=0, index=knn_idx).contiguous().view(num_nodes, k, self.feat_dim)
+        knn_feat = torch.gather(node_feat, dim=0, index=knn_idx).contiguous().view(self.num_nodes, k, self.feat_dim)
 
         if method == 'cosine':
             knn_similarity = F.cosine_similarity(node_feat[:,None,:], knn_feat, dim=2)
@@ -281,11 +279,11 @@ class MultiPrototypeTransductiveInference(nn.Module):
         else:
             raise NotImplementedError('Error! Distance computation method (%s) is unknown!' %method)
 
-        A = torch.zeros(num_nodes, num_nodes, dtype=torch.float).cuda()
+        A = torch.zeros(self.num_nodes, self.num_nodes, dtype=torch.float).cuda()
         A = A.scatter_(1, I, knn_similarity)
         A = A + A.transpose(0,1)
 
-        identity_matrix = torch.eye(num_nodes, requires_grad=False).cuda()
+        identity_matrix = torch.eye(self.num_nodes, requires_grad=False).cuda()
         A = A * (1 - identity_matrix)
         return A
 
@@ -306,16 +304,16 @@ class MultiPrototypeTransductiveInference(nn.Module):
         S = D_sqrt_inv @ A @ D_sqrt_inv
 
         #close form solution
-        Z = torch.inverse(torch.eye(S.shape[0]).cuda() - alpha*S + eps) @ Y
+        Z = torch.inverse(torch.eye(self.num_nodes).cuda() - alpha*S + eps) @ Y
         return Z
 
     def get_pred(self, prototypes, prototype_labels, query_feat):
-        num_prototypes = prototypes.shape[0]
+        self.num_prototypes = prototypes.shape[0]
 
         # construct label matrix Y, with Y_ij = 1 if x_i is from the support set and labeled as y_i = j, otherwise Y_ij = 0.
-        num_nodes = num_prototypes + query_feat.shape[0]  # number of node of partial observed graph
-        Y = torch.zeros(num_nodes, self.n_classes).cuda()
-        Y[:num_prototypes] = prototype_labels
+        self.num_nodes = self.num_prototypes + query_feat.shape[0]  # number of node of partial observed graph
+        Y = torch.zeros(self.num_nodes, self.n_classes).cuda()
+        Y[:self.num_prototypes] = prototype_labels
 
         # construct feat matrix F
         node_feat = torch.cat((prototypes, query_feat), dim=0)  # (num_nodes, feat_dim)
@@ -324,11 +322,12 @@ class MultiPrototypeTransductiveInference(nn.Module):
         A = self.calculateLocalConstrainedAffinity(node_feat, k=self.k_connect)
         Z = self.label_propagate(A, Y)  # (num_nodes, n_way+1)
 
-        query_pred = Z[num_prototypes:, :]  # (n_queries*num_points, n_way+1)
+        query_pred = Z[self.num_prototypes:, :]  # (n_queries*num_points, n_way+1)
         query_pred = query_pred.view(-1, self.n_points, self.n_classes).transpose(1, 2)  # (n_queries, n_way+1, num_points)
+
         return query_pred
 
-    def get_distill_loss(self, teacher_pred, student_pred, gt, tau=5):
+    def get_distill_loss(self, student_pred, teacher_pred, gt, tau=1):
         """
         Args:
             teacher_pred: [b, c, n]
