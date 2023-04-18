@@ -64,13 +64,13 @@ class MultiPrototypeTransductiveInference(nn.Module):
         self.cross_align = MultiHeadAttention(in_channel=self.feat_dim, out_channel=self.feat_dim, n_heads=3,
                                               att_dropout=args.dropout_ratio, use_proj=True, use_ffn=False)
 
-        self.bg_proj = nn.Sequential(nn.Linear(self.feat_dim, self.feat_dim // 2),
+        self.cross_bg_proj = nn.Sequential(nn.Linear(self.feat_dim, self.feat_dim // 2),
                                      nn.LayerNorm(self.feat_dim // 2),
                                      nn.ReLU(inplace=True),
                                      nn.Linear(self.feat_dim // 2, self.feat_dim),
                                      nn.Sigmoid())
 
-    def forward(self, support_x, support_y, query_x, query_y, is_training=False, use_teacher=False):
+    def forward(self, support_x, support_y, query_x, query_y, use_teacher=False):
         """
         Args:
             support_x: support point clouds with shape (n_way, k_shot, in_channels, num_points)
@@ -121,7 +121,7 @@ class MultiPrototypeTransductiveInference(nn.Module):
 
             cross_bg_prototypes1 = self.cross_align([bg_prototypes, query_feat, query_feat])
             cross_bg_prototypes2 = self.cross_align([bg_prototypes, fg_prototypes, fg_prototypes])
-            cross_bg_prototypes3 = cross_bg_prototypes1 * (1 - torch.sigmoid(self.bg_proj(cross_bg_prototypes2)))
+            cross_bg_prototypes3 = cross_bg_prototypes1 * (1 - self.cross_bg_proj(cross_bg_prototypes2))
             bg_prototypes = self.cross_align([bg_prototypes, cross_bg_prototypes3, cross_bg_prototypes3])
 
             bg_prototypes = bg_prototypes.squeeze(0)
