@@ -49,7 +49,7 @@ class SelfAttention(nn.Module):
         
 
 class MultiHeadAttention(nn.Module):
-    def __init__(self, in_channel, out_channel, n_classes=2, n_heads=1, att_dropout=0.1, use_proj=True, use_ffn=False):
+    def __init__(self, in_channel, out_channel, n_classes=2, n_heads=1, att_dropout=0.1, ffn_dropout=0.2, use_proj=True, use_ffn=False):
         """
         :param in_channel: previous layer's output feature dimension
         :param out_channel: size of output vector, defaults to in_channel
@@ -67,18 +67,16 @@ class MultiHeadAttention(nn.Module):
         self.k_map = nn.Linear(self.in_channel, self.out_channel)
         self.v_map = nn.Linear(self.in_channel, self.out_channel)
         self.dropout = nn.Dropout(att_dropout)
-        self.norm = nn.ModuleList([nn.LayerNorm(self.out_channel)])
-        if self.use_proj:
-            self.proj = nn.Sequential(nn.Linear(self.out_channel, self.out_channel),
-                                      nn.ReLU(inplace=True),
-                                      nn.Dropout(0.2))
-        if self.use_ffn:
-            self.ffn = nn.Sequential(nn.Linear(self.out_channel, self.out_channel * 3, ),
-                                     nn.ReLU(inplace=True),
-                                     nn.Dropout(0.2),
-                                     nn.Linear(self.out_channel * 3, self.out_channel))
 
-            self.norm.append(nn.LayerNorm(self.out_channel))
+        if self.use_proj:
+            self.proj = nn.Sequential(nn.Linear(self.out_channel, self.out_channel//2),
+                                      nn.ReLU(inplace=True),
+                                      nn.Linear(self.out_channel//2, self.out_channel))
+        if self.use_ffn:
+            self.ffn = nn.Sequential(nn.Linear(self.out_channel, self.out_channel * 3),
+                                     nn.ReLU(inplace=True),
+                                     nn.Dropout(ffn_dropout),
+                                     nn.Linear(self.out_channel * 3, self.out_channel))
 
     def forward(self, x):
         """
@@ -102,25 +100,23 @@ class MultiHeadAttention(nn.Module):
         k = self.k_map(k)
         v = self.v_map(v)
 
-        # [n_head, B, N, c//n_head]
         q = q.reshape(B, N, self.n_heads, self.out_channel // self.n_heads).permute(0, 2, 1, 3)
         k = k.reshape(k.shape[0], k.shape[1], self.n_heads, self.out_channel // self.n_heads).permute(0, 2, 1, 3)
         v = v.reshape(v.shape[0], v.shape[1], self.n_heads, self.out_channel // self.n_heads).permute(0, 2, 1, 3)
 
         # [n_head, B, N, B*N]
         attn = torch.matmul(q, k.transpose(2, 3)) / self.temperature
-
         attn = self.dropout(F.softmax(attn, dim=-1))
         y = torch.matmul(attn, v).transpose(1, 2).reshape(B, N, -1)
 
         if self.use_proj:
             y = self.proj(y)
 
-        y = self.norm[0](y + q_res)
+        y = y + q_res
 
         if self.use_ffn:
             att_res = y
             y = self.ffn(y)
-            y = self.norm[1](y + att_res)
+            y = y + att_res
 
         return y
