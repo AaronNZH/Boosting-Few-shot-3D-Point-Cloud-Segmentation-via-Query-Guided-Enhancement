@@ -25,8 +25,8 @@ class MPTILearner(object):
                 {'params': self.model.encoder.parameters(), 'lr': 1e-4},
                 {'params': self.model.base_learner.parameters()},
                 {'params': self.model.att_learner.parameters()},
-                {'params': self.model.cross_align.parameters(), 'lr': 1e-3},
-                {'params': self.model.bg_proj.parameters()}
+                {'params': self.model.cross_align.parameters(), 'lr': 6e-4},
+                {'params': self.model.cross_bg_proj.parameters()}
             ], lr=args.lr)
 
             # set learning rate scheduler
@@ -58,7 +58,7 @@ class MPTILearner(object):
         [support_x, support_y, query_x, query_y] = data
         self.model.train()
 
-        query_logits, loss = self.model(support_x, support_y, query_x, query_y, is_training=True, use_teacher=True)
+        query_logits, loss = self.model(support_x, support_y, query_x, query_y, use_teacher=True)
 
         self.optimizer.zero_grad()
         loss.backward()
