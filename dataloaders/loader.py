@@ -16,13 +16,13 @@ from torch.utils.data import Dataset
 
 
 def sample_K_pointclouds(data_path, num_point, pc_attribs, pc_augm, pc_augm_config,
-                         scan_names, sampled_class, sampled_classes, is_support=False):
+                         scan_names, sampled_class, sampled_classes):
     '''sample K pointclouds and the corresponding labels for one class (one_way)'''
     ptclouds = []
     labels = []
     for scan_name in scan_names:
         ptcloud, label = sample_pointcloud(data_path, num_point, pc_attribs, pc_augm, pc_augm_config,
-                                           scan_name, sampled_classes, sampled_class, support=is_support)
+                                           scan_name, sampled_classes, sampled_class)
         ptclouds.append(ptcloud)
         labels.append(label)
 
@@ -33,7 +33,7 @@ def sample_K_pointclouds(data_path, num_point, pc_attribs, pc_augm, pc_augm_conf
 
 
 def sample_pointcloud(data_path, num_point, pc_attribs, pc_augm, pc_augm_config, scan_name,
-                      sampled_classes, sampled_class=0, support=False, random_sample=False):
+                      sampled_classes, sampled_class=0, random_sample=False):
     sampled_classes = list(sampled_classes)
     data = np.load(os.path.join(data_path, 'scenes', 'data', '%s.npy' % scan_name))
     N = data.shape[0]  # number of points in this scan
@@ -77,17 +77,10 @@ def sample_pointcloud(data_path, num_point, pc_attribs, pc_augm, pc_augm_config,
     if 'XYZ' in pc_attribs: ptcloud.append(XYZ)
     ptcloud = np.concatenate(ptcloud, axis=1)
 
-    if support:
-        # groundtruth = labels == sampled_class
-        groundtruth = np.zeros_like(labels)
-        for i, label in enumerate(labels):
-            if label in sampled_classes:
-                groundtruth[i] = sampled_classes.index(label) + 1
-    else:
-        groundtruth = np.zeros_like(labels)
-        for i, label in enumerate(labels):
-            if label in sampled_classes:
-                groundtruth[i] = sampled_classes.index(label) + 1
+    groundtruth = np.zeros_like(labels)
+    for i, label in enumerate(labels):
+        if label in sampled_classes:
+            groundtruth[i] = sampled_classes.index(label) + 1
 
     return ptcloud, groundtruth
 
@@ -207,16 +200,14 @@ class MyDataset(Dataset):
                                                                                 self.pc_augm_config,
                                                                                 query_scannames,
                                                                                 sampled_class,
-                                                                                sampled_classes,
-                                                                                is_support=False)
+                                                                                sampled_classes)
 
             support_ptclouds_one_way, support_masks_one_way = sample_K_pointclouds(self.data_path, self.num_point,
                                                                                    self.pc_attribs, self.pc_augm,
                                                                                    self.pc_augm_config,
                                                                                    support_scannames,
                                                                                    sampled_class,
-                                                                                   sampled_classes,
-                                                                                   is_support=True)
+                                                                                   sampled_classes)
 
             query_ptclouds.append(query_ptclouds_one_way)
             query_labels.append(query_labels_one_way)
