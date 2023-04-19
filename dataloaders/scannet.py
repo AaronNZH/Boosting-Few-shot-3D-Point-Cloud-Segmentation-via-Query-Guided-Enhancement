@@ -49,7 +49,7 @@ class ScanNetDataset(object):
             for file in glob.glob(os.path.join(self.data_path, 'data', '*.npy')):
                 scan_name = os.path.basename(file)[:-4]
                 data = np.load(file)
-                labels = data[:,6].astype(np.int)
+                labels = data[:,6].astype(np.int_)
                 classes = np.unique(labels)
                 print('{0} | shape: {1} | classes: {2}'.format(scan_name, data.shape, list(classes)))
                 for class_id in classes:
