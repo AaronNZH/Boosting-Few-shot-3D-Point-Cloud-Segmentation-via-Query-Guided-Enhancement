@@ -70,7 +70,7 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description='[Preprocessing] Split rooms into blocks')
-    parser.add_argument('--data_path', default='../datasets/S3DIS/')
+    parser.add_argument('--data_path', default='./datasets/S3DIS/')
     parser.add_argument('--dataset', default='s3dis', metavar='bs', help='s3dis|scannet')
     parser.add_argument('--block_size', type=float, default=1, metavar='s', help='size of each block')
     parser.add_argument('--stride', type=float, default=1, help='stride of sliding window for splitting rooms, '
