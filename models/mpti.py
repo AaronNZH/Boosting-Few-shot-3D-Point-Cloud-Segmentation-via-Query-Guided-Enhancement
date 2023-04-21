@@ -16,6 +16,7 @@ from models.attention import MultiHeadAttention, SelfAttention
 
 class BaseLearner(nn.Module):
     """The class for inner loop."""
+
     def __init__(self, in_channels, params):
         super(BaseLearner, self).__init__()
 
@@ -26,15 +27,15 @@ class BaseLearner(nn.Module):
             if i == 0:
                 in_dim = in_channels
             else:
-                in_dim = params[i-1]
+                in_dim = params[i - 1]
             self.convs.append(nn.Sequential(
-                              nn.Conv1d(in_dim, params[i], 1),
-                              nn.BatchNorm1d(params[i])))
+                nn.Conv1d(in_dim, params[i], 1),
+                nn.BatchNorm1d(params[i])))
 
     def forward(self, x):
         for i in range(self.num_convs):
             x = self.convs[i](x)
-            if i != self.num_convs-1:
+            if i != self.num_convs - 1:
                 x = F.relu(x)
         return x
 
@@ -53,7 +54,7 @@ class MultiPrototypeTransductiveInference(nn.Module):
         self.k_connect = args.k_connect
         self.sigma = args.mpti_sigma
 
-        self.n_classes = self.n_way+1
+        self.n_classes = self.n_way + 1
 
         self.encoder = DGCNN(args.edgeconv_widths, args.dgcnn_mlp_widths, args.pc_in_dim, k=args.dgcnn_k)
         self.base_learner = BaseLearner(args.dgcnn_mlp_widths[-1], args.base_widths)
@@ -64,11 +65,10 @@ class MultiPrototypeTransductiveInference(nn.Module):
         self.cross_align = MultiHeadAttention(in_channel=self.feat_dim, out_channel=self.feat_dim, n_heads=3,
                                               att_dropout=args.dropout_ratio, use_proj=True, use_ffn=False)
 
-        self.cross_bg_proj = nn.Sequential(nn.Linear(self.feat_dim, self.feat_dim // 2),
-                                     nn.LayerNorm(self.feat_dim // 2),
-                                     nn.ReLU(inplace=True),
-                                     nn.Linear(self.feat_dim // 2, self.feat_dim),
-                                     nn.Sigmoid())
+        self.cross_bg_proj = nn.Sequential(nn.Linear(self.feat_dim, self.feat_dim // 3),
+                                           nn.ReLU(inplace=True),
+                                           nn.Linear(self.feat_dim // 3, self.feat_dim),
+                                           nn.Sigmoid())
 
     def forward(self, support_x, support_y, query_x, query_y, use_teacher=False):
         """
@@ -80,10 +80,10 @@ class MultiPrototypeTransductiveInference(nn.Module):
         Return:
             query_pred: query point clouds predicted similarity, shape: (n_queries, n_way+1, num_points)
         """
-        support_x = support_x.view(self.n_way*self.k_shot, self.in_channels, self.n_points)
+        support_x = support_x.view(self.n_way * self.k_shot, self.in_channels, self.n_points)
         support_feat = self.getFeatures(support_x)
         support_feat = support_feat.view(self.n_way, self.k_shot, self.feat_dim, self.n_points)
-        query_feat = self.getFeatures(query_x) #(n_queries, feat_dim, num_points)
+        query_feat = self.getFeatures(query_x)  # (n_queries, feat_dim, num_points)
 
         # teacher
         if use_teacher:
@@ -103,10 +103,11 @@ class MultiPrototypeTransductiveInference(nn.Module):
                 prototypes = query_fg_proto
                 prototype_labels = query_fg_labels
 
-            query_feat_for_teacher = query_feat_for_teacher.squeeze(1).transpose(1,2).contiguous().view(-1, self.feat_dim)
+            query_feat_for_teacher = query_feat_for_teacher.squeeze(1).transpose(1, 2).contiguous().view(-1,
+                                                                                                         self.feat_dim)
             teacher_pred = self.get_pred(prototypes, prototype_labels, query_feat_for_teacher)
 
-        query_feat = query_feat.transpose(1,2).contiguous().view(-1, self.feat_dim) #(n_queries*num_points, feat_dim)
+        query_feat = query_feat.transpose(1, 2).contiguous().view(-1, self.feat_dim)  # (n_queries*num_points, feat_dim)
         fg_mask = support_y
         bg_mask = torch.logical_not(support_y)
 
@@ -128,8 +129,8 @@ class MultiPrototypeTransductiveInference(nn.Module):
             fg_prototypes = fg_prototypes.squeeze(0)
             query_feat = query_feat.squeeze(0)
 
-            prototypes = torch.cat((bg_prototypes, fg_prototypes), dim=0) #(*, feat_dim)
-            prototype_labels = torch.cat((bg_labels, fg_labels), dim=0) #(*, n_classes)
+            prototypes = torch.cat((bg_prototypes, fg_prototypes), dim=0)  # (*, feat_dim)
+            prototype_labels = torch.cat((bg_labels, fg_labels), dim=0)  # (*, n_classes)
         else:
             prototypes = fg_prototypes
             prototype_labels = fg_labels
@@ -205,15 +206,15 @@ class MultiPrototypeTransductiveInference(nn.Module):
         labels = []
         for i in range(self.n_way):
             # extract point features belonging to current foreground class
-            feat = feats[i, ...].transpose(1,2).contiguous().view(-1, self.feat_dim) #(k_shot*num_points, feat_dim)
-            index = torch.nonzero(torch.eq(masks[i, ...].view(-1), i+1)).squeeze(1) #(k_shot*num_points,)
+            feat = feats[i, ...].transpose(1, 2).contiguous().view(-1, self.feat_dim)  # (k_shot*num_points, feat_dim)
+            index = torch.nonzero(torch.eq(masks[i, ...].view(-1), i + 1)).squeeze(1)  # (k_shot*num_points,)
             feat = feat[index]
             class_prototypes = self.getMutiplePrototypes(feat, k)
             prototypes.append(class_prototypes)
 
             # construct label matrix
             class_labels = torch.zeros(class_prototypes.shape[0], self.n_classes)
-            class_labels[:, i+1] = 1
+            class_labels[:, i + 1] = 1
             labels.append(class_labels)
 
         prototypes = torch.cat(prototypes, dim=0)
@@ -232,7 +233,7 @@ class MultiPrototypeTransductiveInference(nn.Module):
             prototypes: background prototypes, shape: (k, feat_dim)
             labels: background prototype labels (one-hot), shape: (k, n_way+1)
         """
-        feats = feats.transpose(2,3).contiguous().view(-1, self.feat_dim)
+        feats = feats.transpose(2, 3).contiguous().view(-1, self.feat_dim)
         index = torch.nonzero(masks.reshape(-1)).squeeze(1)
         feat = feats[index]
         # in case this support set does not contain background points..
@@ -265,23 +266,23 @@ class MultiPrototypeTransductiveInference(nn.Module):
         index = faiss.IndexFlatL2(self.feat_dim)
         index.add(X)
         _, I = index.search(X, k + 1)
-        I = torch.from_numpy(I[:, 1:]).cuda() #(num_nodes, k)
+        I = torch.from_numpy(I[:, 1:]).cuda()  # (num_nodes, k)
 
         # create the affinity matrix
         knn_idx = I.unsqueeze(2).expand(-1, -1, self.feat_dim).contiguous().view(-1, self.feat_dim)
         knn_feat = torch.gather(node_feat, dim=0, index=knn_idx).contiguous().view(self.num_nodes, k, self.feat_dim)
 
         if method == 'cosine':
-            knn_similarity = F.cosine_similarity(node_feat[:,None,:], knn_feat, dim=2)
+            knn_similarity = F.cosine_similarity(node_feat[:, None, :], knn_feat, dim=2)
         elif method == 'gaussian':
             dist = F.pairwise_distance(node_feat[:, None, :], knn_feat, p=2)
-            knn_similarity = torch.exp(-0.5*(dist/self.sigma)**2)
+            knn_similarity = torch.exp(-0.5 * (dist / self.sigma) ** 2)
         else:
-            raise NotImplementedError('Error! Distance computation method (%s) is unknown!' %method)
+            raise NotImplementedError('Error! Distance computation method (%s) is unknown!' % method)
 
         A = torch.zeros(self.num_nodes, self.num_nodes, dtype=torch.float).cuda()
         A = A.scatter_(1, I, knn_similarity)
-        A = A + A.transpose(0,1)
+        A = A + A.transpose(0, 1)
 
         identity_matrix = torch.eye(self.num_nodes, requires_grad=False).cuda()
         A = A * (1 - identity_matrix)
@@ -296,15 +297,15 @@ class MultiPrototypeTransductiveInference(nn.Module):
         Return:
             Z: label predictions, shape: (num_nodes, n_way+1)
         """
-        #compute symmetrically normalized matrix S
+        # compute symmetrically normalized matrix S
         eps = np.finfo(float).eps
-        D = A.sum(1) #(num_nodes,)
-        D_sqrt_inv = torch.sqrt(1.0/(D+eps))
+        D = A.sum(1)  # (num_nodes,)
+        D_sqrt_inv = torch.sqrt(1.0 / (D + eps))
         D_sqrt_inv = torch.diag_embed(D_sqrt_inv).cuda()
         S = D_sqrt_inv @ A @ D_sqrt_inv
 
-        #close form solution
-        Z = torch.inverse(torch.eye(self.num_nodes).cuda() - alpha*S + eps) @ Y
+        # close form solution
+        Z = torch.inverse(torch.eye(self.num_nodes).cuda() - alpha * S + eps) @ Y
         return Z
 
     def get_pred(self, prototypes, prototype_labels, query_feat):
@@ -323,7 +324,8 @@ class MultiPrototypeTransductiveInference(nn.Module):
         Z = self.label_propagate(A, Y)  # (num_nodes, n_way+1)
 
         query_pred = Z[self.num_prototypes:, :]  # (n_queries*num_points, n_way+1)
-        query_pred = query_pred.view(-1, self.n_points, self.n_classes).transpose(1, 2)  # (n_queries, n_way+1, num_points)
+        query_pred = query_pred.view(-1, self.n_points, self.n_classes).transpose(1,
+                                                                                  2)  # (n_queries, n_way+1, num_points)
 
         return query_pred
 
