@@ -20,8 +20,8 @@ class ScanNetDataset(object):
         self.type2class = {self.class2type[t]: t for t in self.class2type}
         self.types = self.type2class.keys()
 
-        self.fold_0 = ['bathtub', 'bed', 'bookshelf', 'cabinet', 'chair','counter', 'curtain', 'desk', 'door', 'floor']
-        self.fold_1 = ['otherfurniture', 'picture', 'refridgerator', 'shower curtain', 'sink', 'sofa', 'table', 'toilet', 'wall', 'window']
+        self.fold_0 = ['otherfurniture', 'picture', 'refridgerator', 'shower curtain', 'sink', 'sofa', 'table', 'toilet', 'wall', 'window']
+        self.fold_1 = ['bathtub', 'bed', 'bookshelf', 'cabinet', 'chair','counter', 'curtain', 'desk', 'door', 'floor']
 
         if cvfold == 0:
             self.test_classes = [self.type2class[i] for i in self.fold_0]
@@ -74,6 +74,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Pre-training on ShapeNet')
     parser.add_argument('--cvfold', type=int, default=0, help='Fold left-out for testing in leave-one-out setting '
                                                               'Options: {0,1}')
-    parser.add_argument('--data_path', type=str, default='../datasets/ScanNet/blocks_bs1_s1', help='Directory to source data')
+    parser.add_argument('--data_path', type=str, default='./datasets/ScanNet/blocks_bs1_s1', help='Directory to source data')
     args = parser.parse_args()
     dataset = ScanNetDataset(args.cvfold, args.data_path)
