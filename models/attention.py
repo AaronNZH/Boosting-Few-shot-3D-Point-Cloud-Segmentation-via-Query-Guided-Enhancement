@@ -46,7 +46,7 @@ class SelfAttention(nn.Module):
         y = torch.matmul(attn, v.transpose(1,2)) # (batch_size, num_points, out_channel)
 
         return y.transpose(1,2)
-        
+
 
 class MultiHeadAttention(nn.Module):
     def __init__(self, in_channel, out_channel, n_classes=2, n_heads=1, att_dropout=0.1, ffn_dropout=0.2, use_proj=True, use_ffn=False):
@@ -69,9 +69,9 @@ class MultiHeadAttention(nn.Module):
         self.dropout = nn.Dropout(att_dropout)
 
         if self.use_proj:
-            self.proj = nn.Sequential(nn.Linear(self.out_channel, self.out_channel//2),
+            self.proj = nn.Sequential(nn.Linear(self.out_channel, self.out_channel//3),
                                       nn.ReLU(inplace=True),
-                                      nn.Linear(self.out_channel//2, self.out_channel))
+                                      nn.Linear(self.out_channel//3, self.out_channel))
         if self.use_ffn:
             self.ffn = nn.Sequential(nn.Linear(self.out_channel, self.out_channel * 3),
                                      nn.ReLU(inplace=True),
