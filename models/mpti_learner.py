@@ -25,7 +25,7 @@ class MPTILearner(object):
                 {'params': self.model.encoder.parameters(), 'lr': 1e-4},
                 {'params': self.model.base_learner.parameters()},
                 {'params': self.model.att_learner.parameters()},
-                {'params': self.model.cross_align.parameters(), 'lr': 6e-4},
+                {'params': self.model.cross_align.parameters()},
                 {'params': self.model.cross_bg_proj.parameters()}
             ], lr=args.lr)
 
