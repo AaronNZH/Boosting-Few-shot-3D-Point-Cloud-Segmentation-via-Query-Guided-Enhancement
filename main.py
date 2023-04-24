@@ -88,6 +88,8 @@ if __name__ == '__main__':
     # MPTI configuration
     parser.add_argument('--n_subprototypes', type=int, default=100,
                         help='Number of prototypes for each class in support set')
+    parser.add_argument('--n_teacher_subprototypes', type=int, default=100,
+                        help='Number of teacher prototypes for each class in support set')
     parser.add_argument('--k_connect', type=int, default=200,
                         help='Number of nearest neighbors to construct local-constrained affinity matrix')
     parser.add_argument('--mpti_sigma', type=float, default=1., help='hyeprparameter in gaussian similarity function')
@@ -108,7 +110,12 @@ if __name__ == '__main__':
         from runs.mpti_train import train
 
         train(args)
-    elif args.phase == 'mptieval':
+    elif args.phase == 'prototrain':
+        args.log_dir = args.save_path + 'log_proto_%s_S%d_N%d_K%d' % (args.dataset, args.cvfold, args.n_way, args.k_shot)
+        from runs.proto_train import train
+
+        train(args)
+    elif args.phase == 'mptieval' or args.phase == 'protoeval':
         args.log_dir = args.model_checkpoint_path
         from runs.eval import eval
 
