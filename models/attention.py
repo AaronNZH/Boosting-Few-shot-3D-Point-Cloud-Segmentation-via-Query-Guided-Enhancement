@@ -22,7 +22,7 @@ class SelfAttention(nn.Module):
             self.out_channel = in_channel
 
         self.temperature = self.out_channel ** 0.5
-
+        
         self.q_map = nn.Conv1d(in_channel, self.out_channel, 1, bias=False)
         self.k_map = nn.Conv1d(in_channel, self.out_channel, 1, bias=False)
         self.v_map = nn.Conv1d(in_channel, self.out_channel, 1, bias=False)
@@ -46,10 +46,10 @@ class SelfAttention(nn.Module):
         y = torch.matmul(attn, v.transpose(1,2)) # (batch_size, num_points, out_channel)
 
         return y.transpose(1,2)
-
+        
 
 class MultiHeadAttention(nn.Module):
-    def __init__(self, in_channel, out_channel, n_classes=2, n_heads=1, att_dropout=0.1, ffn_dropout=0.2, use_proj=True, use_ffn=False):
+    def __init__(self, in_channel, out_channel, n_classes=2, n_heads=1, att_dropout=0.1, use_proj=True):
         """
         :param in_channel: previous layer's output feature dimension
         :param out_channel: size of output vector, defaults to in_channel
@@ -60,7 +60,6 @@ class MultiHeadAttention(nn.Module):
         self.n_classes = n_classes
         self.in_channel = in_channel
         self.out_channel = out_channel
-        self.use_ffn = use_ffn
         self.use_proj = use_proj
 
         self.q_map = nn.Linear(self.in_channel, self.out_channel)
@@ -69,14 +68,9 @@ class MultiHeadAttention(nn.Module):
         self.dropout = nn.Dropout(att_dropout)
 
         if self.use_proj:
-            self.proj = nn.Sequential(nn.Linear(self.out_channel, self.out_channel//3),
+            self.proj = nn.Sequential(nn.Linear(self.out_channel//2, self.out_channe//2),
                                       nn.ReLU(inplace=True),
-                                      nn.Linear(self.out_channel//3, self.out_channel))
-        if self.use_ffn:
-            self.ffn = nn.Sequential(nn.Linear(self.out_channel, self.out_channel * 3),
-                                     nn.ReLU(inplace=True),
-                                     nn.Dropout(ffn_dropout),
-                                     nn.Linear(self.out_channel * 3, self.out_channel))
+                                      nn.Linear(self.out_channel//2, self.out_channel))
 
     def forward(self, x):
         """
@@ -86,10 +80,8 @@ class MultiHeadAttention(nn.Module):
         :return: y: attentioned features maps,
                         shape： (batch_size, out_channel, num_points)
         """
-        if isinstance(x, list) or isinstance(x, tuple):
-            q, k, v = x
-        else:
-            q = k = v = x
+
+        q, k, v = x
 
         B, N = q.shape[0], q.shape[1]
 
@@ -111,12 +103,6 @@ class MultiHeadAttention(nn.Module):
 
         if self.use_proj:
             y = self.proj(y)
-
+            
         y = y + q_res
-
-        if self.use_ffn:
-            att_res = y
-            y = self.ffn(y)
-            y = y + att_res
-
         return y
