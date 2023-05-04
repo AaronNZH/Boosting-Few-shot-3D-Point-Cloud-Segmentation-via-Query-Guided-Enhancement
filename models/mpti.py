@@ -63,11 +63,11 @@ class MultiPrototypeTransductiveInference(nn.Module):
         self.feat_dim = args.edgeconv_widths[0][-1] + args.output_dim + args.base_widths[-1]
 
         self.cross_align = MultiHeadAttention(in_channel=self.feat_dim, out_channel=self.feat_dim, n_heads=3,
-                                              att_dropout=args.dropout_ratio, use_proj=True, use_ffn=False)
+                                              att_dropout=args.dropout_ratio, use_proj=True)
 
-        self.cross_bg_proj = nn.Sequential(nn.Linear(self.feat_dim, self.feat_dim // 3),
+        self.cross_bg_proj = nn.Sequential(nn.Linear(self.feat_dim, self.feat_dim // 2),
                                            nn.ReLU(inplace=True),
-                                           nn.Linear(self.feat_dim // 3, self.feat_dim),
+                                           nn.Linear(self.feat_dim//2, self.feat_dim),
                                            nn.Sigmoid())
 
     def forward(self, support_x, support_y, query_x, query_y, use_teacher=False):
@@ -95,7 +95,6 @@ class MultiPrototypeTransductiveInference(nn.Module):
             query_bg_proto, query_bg_labels = self.getBackgroundPrototypes(query_feat_for_teacher, query_bg_mask,
                                                                            k=self.teacher_n_subprototypes)
 
-            # prototype learning
             if query_bg_proto is not None and query_bg_labels is not None:
                 prototypes = torch.cat((query_bg_proto, query_fg_proto), dim=0)  # (*, feat_dim)
                 prototype_labels = torch.cat((query_bg_labels, query_fg_labels), dim=0)  # (*,n_classes)
@@ -114,12 +113,12 @@ class MultiPrototypeTransductiveInference(nn.Module):
         fg_prototypes, fg_labels = self.getForegroundPrototypes(support_feat, fg_mask, k=self.n_subprototypes)
         bg_prototypes, bg_labels = self.getBackgroundPrototypes(support_feat, bg_mask, k=self.n_subprototypes)
 
-        # prototype learning
         if bg_prototypes is not None and bg_labels is not None:
             bg_prototypes = bg_prototypes.unsqueeze(0)
             fg_prototypes = fg_prototypes.unsqueeze(0)
             query_feat = query_feat.unsqueeze(0)
 
+            # background prototype adaptation
             cross_bg_prototypes1 = self.cross_align([bg_prototypes, query_feat, query_feat])
             cross_bg_prototypes2 = self.cross_align([bg_prototypes, fg_prototypes, fg_prototypes])
             cross_bg_prototypes3 = cross_bg_prototypes1 * (1 - self.cross_bg_proj(cross_bg_prototypes2))
@@ -261,6 +260,7 @@ class MultiPrototypeTransductiveInference(nn.Module):
             A: Affinity matrix with zero diagonal, shape: (num_nodes, num_nodes)
         """
         # kNN search for the graph
+        num_nodes = node_feat.shape[0]
         X = node_feat.detach().cpu().numpy()
         # build the index with cpu version
         index = faiss.IndexFlatL2(self.feat_dim)
@@ -270,7 +270,7 @@ class MultiPrototypeTransductiveInference(nn.Module):
 
         # create the affinity matrix
         knn_idx = I.unsqueeze(2).expand(-1, -1, self.feat_dim).contiguous().view(-1, self.feat_dim)
-        knn_feat = torch.gather(node_feat, dim=0, index=knn_idx).contiguous().view(self.num_nodes, k, self.feat_dim)
+        knn_feat = torch.gather(node_feat, dim=0, index=knn_idx).contiguous().view(num_nodes, k, self.feat_dim)
 
         if method == 'cosine':
             knn_similarity = F.cosine_similarity(node_feat[:, None, :], knn_feat, dim=2)
@@ -280,11 +280,11 @@ class MultiPrototypeTransductiveInference(nn.Module):
         else:
             raise NotImplementedError('Error! Distance computation method (%s) is unknown!' % method)
 
-        A = torch.zeros(self.num_nodes, self.num_nodes, dtype=torch.float).cuda()
+        A = torch.zeros(num_nodes, num_nodes, dtype=torch.float).cuda()
         A = A.scatter_(1, I, knn_similarity)
         A = A + A.transpose(0, 1)
 
-        identity_matrix = torch.eye(self.num_nodes, requires_grad=False).cuda()
+        identity_matrix = torch.eye(num_nodes, requires_grad=False).cuda()
         A = A * (1 - identity_matrix)
         return A
 
@@ -305,16 +305,16 @@ class MultiPrototypeTransductiveInference(nn.Module):
         S = D_sqrt_inv @ A @ D_sqrt_inv
 
         # close form solution
-        Z = torch.inverse(torch.eye(self.num_nodes).cuda() - alpha * S + eps) @ Y
+        Z = torch.inverse(torch.eye(S.shape[0]).cuda() - alpha * S + eps) @ Y
         return Z
 
     def get_pred(self, prototypes, prototype_labels, query_feat):
-        self.num_prototypes = prototypes.shape[0]
+        num_prototypes = prototypes.shape[0]
 
         # construct label matrix Y, with Y_ij = 1 if x_i is from the support set and labeled as y_i = j, otherwise Y_ij = 0.
-        self.num_nodes = self.num_prototypes + query_feat.shape[0]  # number of node of partial observed graph
-        Y = torch.zeros(self.num_nodes, self.n_classes).cuda()
-        Y[:self.num_prototypes] = prototype_labels
+        num_nodes = num_prototypes + query_feat.shape[0]  # number of node of partial observed graph
+        Y = torch.zeros(num_nodes, self.n_classes).cuda()
+        Y[:num_prototypes] = prototype_labels
 
         # construct feat matrix F
         node_feat = torch.cat((prototypes, query_feat), dim=0)  # (num_nodes, feat_dim)
@@ -323,7 +323,7 @@ class MultiPrototypeTransductiveInference(nn.Module):
         A = self.calculateLocalConstrainedAffinity(node_feat, k=self.k_connect)
         Z = self.label_propagate(A, Y)  # (num_nodes, n_way+1)
 
-        query_pred = Z[self.num_prototypes:, :]  # (n_queries*num_points, n_way+1)
+        query_pred = Z[num_prototypes:, :]  # (n_queries*num_points, n_way+1)
         query_pred = query_pred.view(-1, self.n_points, self.n_classes).transpose(1,
                                                                                   2)  # (n_queries, n_way+1, num_points)
 
@@ -337,14 +337,15 @@ class MultiPrototypeTransductiveInference(nn.Module):
             gt: [b, n]
         """
         loss = 0.
-        teacher_pred = torch.softmax(teacher_pred * tau, dim=1)
         student_pred = torch.log_softmax(student_pred * tau, dim=1)
+        teacher_pred = teacher_pred.detach()
+        teacher_pred = torch.softmax(teacher_pred * tau, dim=1)
         gt = gt.unsqueeze(1)  # [b, 1, n]
         cross_entropy = -1 * torch.mul(teacher_pred, student_pred)  # [b, c, n]
 
         for i in range(self.n_classes):
             mask = torch.eq(gt, i)
-            cur_loss = (cross_entropy * mask).sum() / (mask.sum() + 1e-12)
+            cur_loss = (cross_entropy * mask).sum() / (mask.sum() + 1e-5)
             loss = loss + cur_loss
 
         return loss / self.n_classes
