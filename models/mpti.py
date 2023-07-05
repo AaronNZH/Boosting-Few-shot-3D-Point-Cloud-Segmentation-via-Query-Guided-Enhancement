@@ -67,10 +67,11 @@ class MultiPrototypeTransductiveInference(nn.Module):
 
         self.cross_bg_proj = nn.Sequential(nn.Linear(self.feat_dim, self.feat_dim // 2),
                                            nn.ReLU(inplace=True),
+                                           nn.Dropout(0.2),
                                            nn.Linear(self.feat_dim//2, self.feat_dim),
                                            nn.Sigmoid())
 
-    def forward(self, support_x, support_y, query_x, query_y, use_teacher=False):
+    def forward(self, support_x, support_y, query_x, query_y, use_teacher=False, use_bpa=True):
         """
         Args:
             support_x: support point clouds with shape (n_way, k_shot, in_channels, num_points)
@@ -113,7 +114,7 @@ class MultiPrototypeTransductiveInference(nn.Module):
         fg_prototypes, fg_labels = self.getForegroundPrototypes(support_feat, fg_mask, k=self.n_subprototypes)
         bg_prototypes, bg_labels = self.getBackgroundPrototypes(support_feat, bg_mask, k=self.n_subprototypes)
 
-        if bg_prototypes is not None and bg_labels is not None:
+        if bg_prototypes is not None and bg_labels is not None and use_bpa:
             bg_prototypes = bg_prototypes.unsqueeze(0)
             fg_prototypes = fg_prototypes.unsqueeze(0)
             query_feat = query_feat.unsqueeze(0)
@@ -140,7 +141,8 @@ class MultiPrototypeTransductiveInference(nn.Module):
         if use_teacher:
             teacher_pred_loss = self.computeCrossEntropyLoss(teacher_pred, query_y)
             distill_loss = self.get_distill_loss(query_pred, teacher_pred, query_y, tau=1)
-            loss = loss + teacher_pred_loss + distill_loss
+            # we found that the training process can be more stable without query pred loss, since it is contradictory to distll loss
+            loss = teacher_pred_loss + distill_loss
 
         return query_pred, loss
 
