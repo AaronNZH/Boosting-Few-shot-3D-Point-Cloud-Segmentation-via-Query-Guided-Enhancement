@@ -114,20 +114,21 @@ class MultiPrototypeTransductiveInference(nn.Module):
         fg_prototypes, fg_labels = self.getForegroundPrototypes(support_feat, fg_mask, k=self.n_subprototypes)
         bg_prototypes, bg_labels = self.getBackgroundPrototypes(support_feat, bg_mask, k=self.n_subprototypes)
 
-        if bg_prototypes is not None and bg_labels is not None and use_bpa:
-            bg_prototypes = bg_prototypes.unsqueeze(0)
-            fg_prototypes = fg_prototypes.unsqueeze(0)
-            query_feat = query_feat.unsqueeze(0)
+        if bg_prototypes is not None and bg_labels is not None:
+            if use_bpa:
+                bg_prototypes = bg_prototypes.unsqueeze(0)
+                fg_prototypes = fg_prototypes.unsqueeze(0)
+                query_feat = query_feat.unsqueeze(0)
 
-            # background prototype adaptation
-            cross_bg_prototypes1 = self.cross_align([bg_prototypes, query_feat, query_feat])
-            cross_bg_prototypes2 = self.cross_align([bg_prototypes, fg_prototypes, fg_prototypes])
-            cross_bg_prototypes3 = cross_bg_prototypes1 * (1 - self.cross_bg_proj(cross_bg_prototypes2))
-            bg_prototypes = self.cross_align([bg_prototypes, cross_bg_prototypes3, cross_bg_prototypes3])
+                cross_bg_prototypes1 = self.cross_align([bg_prototypes, query_feat, query_feat])
+                cross_bg_prototypes2 = self.cross_align([bg_prototypes, fg_prototypes, fg_prototypes])
+                cross_bg_prototypes3 = cross_bg_prototypes1 * (1 - self.cross_bg_proj(cross_bg_prototypes2))
+                # cross_bg_prototypes3 = self.additional_proj(cross_bg_prototypes3)
+                bg_prototypes = self.cross_align([bg_prototypes, cross_bg_prototypes3, cross_bg_prototypes3])
 
-            bg_prototypes = bg_prototypes.squeeze(0)
-            fg_prototypes = fg_prototypes.squeeze(0)
-            query_feat = query_feat.squeeze(0)
+                bg_prototypes = bg_prototypes.squeeze(0)
+                fg_prototypes = fg_prototypes.squeeze(0)
+                query_feat = query_feat.squeeze(0)
 
             prototypes = torch.cat((bg_prototypes, fg_prototypes), dim=0)  # (*, feat_dim)
             prototype_labels = torch.cat((bg_labels, fg_labels), dim=0)  # (*, n_classes)
