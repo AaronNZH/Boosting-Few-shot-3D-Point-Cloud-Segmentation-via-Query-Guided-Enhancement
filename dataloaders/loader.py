@@ -200,16 +200,14 @@ class MyDataset(Dataset):
                                                                                 self.pc_augm_config,
                                                                                 query_scannames,
                                                                                 sampled_class,
-                                                                                sampled_classes,
-                                                                                is_support=False)
+                                                                                sampled_classes)
 
             support_ptclouds_one_way, support_masks_one_way = sample_K_pointclouds(self.data_path, self.num_point,
                                                                                    self.pc_attribs, self.pc_augm,
                                                                                    self.pc_augm_config,
                                                                                    support_scannames,
                                                                                    sampled_class,
-                                                                                   sampled_classes,
-                                                                                   is_support=True)
+                                                                                   sampled_classes)
 
             query_ptclouds.append(query_ptclouds_one_way)
             query_labels.append(query_labels_one_way)
