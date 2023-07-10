@@ -1,7 +1,3 @@
-""" Multi-prototype transductive inference
-
-Author: Zhao Na, 2020
-"""
 import numpy as np
 import faiss
 
