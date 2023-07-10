@@ -1,8 +1,8 @@
-"""Main function for this repo
-
-Author: Zhao Na, 2020
-
 """
+Adapted from https://github.com/Na-Z/attMPTI/tree/main/main.py
+Author: Zhenhua Ning, 2022
+"""
+
 import ast
 import argparse
 import random
@@ -80,8 +80,6 @@ if __name__ == '__main__':
     parser.add_argument('--base_widths', default='[128, 64]', help='BaseLearner widths')
     parser.add_argument('--output_dim', type=int, default=64,
                         help='The dimension of the final output of attention learner or linear mapper')
-    parser.add_argument('--use_attention', action='store_true', help='if incorporate attention learner')
-
     # protoNet configuration
     parser.add_argument('--dist_method', default='gaussian',
                         help='Method to compute distance between query feature maps and prototypes.[Option: cosine|euclidean]')
@@ -96,6 +94,9 @@ if __name__ == '__main__':
 
     # parser.add_argument('--onehot', type=str, default='cosinetrans')
     parser.add_argument('--dropout_ratio', type=float, default=0.2)
+
+    parser.add_argument('--use_bpa', action='store_true', help='Use BPA module')
+    parser.add_argument('--use_hr', action='store_true', help='Use HR module')
 
     args = parser.parse_args()
 
