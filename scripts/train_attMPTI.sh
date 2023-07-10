@@ -39,6 +39,7 @@ args=(--phase 'mptitrain' --dataset "${DATASET}" --cvfold $SPLIT
       --dgcnn_mlp_widths "$MLP_WIDTHS" --base_widths "$BASE_WIDTHS" 
       --n_iters $NUM_ITERS --eval_interval $EVAL_INTERVAL --batch_size 1
       --lr $LR  --step_size $DECAY_STEP --gamma $DECAY_RATIO
-      --n_way $N_WAY --k_shot $K_SHOT --n_queries $N_QUERIES --n_episode_test $N_TEST_EPISODES)
+      --n_way $N_WAY --k_shot $K_SHOT --n_queries $N_QUERIES --n_episode_test $N_TEST_EPISODES
+      --use_bpa --use_hr)
 
 CUDA_VISIBLE_DEVICES=$GPU_ID python main.py "${args[@]}"
