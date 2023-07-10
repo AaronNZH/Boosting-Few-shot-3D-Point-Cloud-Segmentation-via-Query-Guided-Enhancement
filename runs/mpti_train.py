@@ -70,12 +70,13 @@ def train(args):
             if mean_IoU > best_iou:
                 best_iou = mean_IoU
                 logger.cprint('*******************Model Saved*******************')
-                save_dict = {'iteration': batch_idx + 1,
-                             'model_state_dict': MPTI.model.state_dict(),
-                             # 'optimizer_state_dict': MPTI.optimizer.state_dict(),
-                             'loss': valid_loss,
-                             'IoU': best_iou
-                             }
+                save_dict = {
+                    'iteration': batch_idx + 1,
+                    'model_state_dict': MPTI.model.state_dict(),
+                    # 'optimizer_state_dict': MPTI.optimizer.state_dict(),
+                    'loss': valid_loss,
+                    'IoU': best_iou
+                }
                 torch.save(save_dict, os.path.join(args.log_dir, 'checkpoint.tar'))
 
     WRITER.close()
