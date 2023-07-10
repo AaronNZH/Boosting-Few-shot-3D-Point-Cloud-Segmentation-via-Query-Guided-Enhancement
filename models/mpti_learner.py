@@ -1,3 +1,8 @@
+"""
+Adapted from https://github.com/Na-Z/attMPTI/tree/main/models/mpti_learner.py
+Author: Zhenhua Ning, 2022
+"""
+
 import os
 import torch
 from torch import optim
