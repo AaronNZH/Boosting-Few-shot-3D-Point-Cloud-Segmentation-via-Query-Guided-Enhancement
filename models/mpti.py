@@ -72,7 +72,7 @@ class MultiPrototypeTransductiveInference(nn.Module):
                                            nn.Linear(self.feat_dim//2, self.feat_dim),
                                            nn.Sigmoid())
 
-    def forward(self, support_x, support_y, query_x, query_y, use_teacher=False, use_bpa=True):
+    def forward(self, support_x, support_y, query_x, query_y, use_hr=False, use_bpa=True):
         """
         Args:
             support_x: support point clouds with shape (n_way, k_shot, in_channels, num_points)
@@ -88,7 +88,7 @@ class MultiPrototypeTransductiveInference(nn.Module):
         query_feat = self.getFeatures(query_x)  # (n_queries, feat_dim, num_points)
 
         # teacher
-        if use_teacher:
+        if use_hr:
             query_feat_for_teacher = query_feat.unsqueeze(1)
             query_fg_mask = query_y.unsqueeze(1)
             query_bg_mask = torch.logical_not(query_fg_mask)
@@ -140,7 +140,7 @@ class MultiPrototypeTransductiveInference(nn.Module):
         query_pred = self.get_pred(prototypes, prototype_labels, query_feat)
         loss = self.computeCrossEntropyLoss(query_pred, query_y)
 
-        if use_teacher:
+        if use_hr:
             teacher_pred_loss = self.computeCrossEntropyLoss(teacher_pred, query_y)
             distill_loss = self.get_distill_loss(query_pred, teacher_pred, query_y, tau=1)
             # we found that the training process can be more stable without query pred loss, since it is contradictory to distll loss
