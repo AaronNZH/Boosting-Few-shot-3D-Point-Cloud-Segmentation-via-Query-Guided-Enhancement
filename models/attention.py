@@ -1,7 +1,3 @@
-"""Self Attention Module
-
-Author: Zhao Na, 2020
-"""
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
