@@ -1,3 +1,8 @@
+"""
+Adapted from https://github.com/Na-Z/attMPTI/tree/main/models/attention.py
+Author: Zhenhua Ning, 2022
+"""
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
