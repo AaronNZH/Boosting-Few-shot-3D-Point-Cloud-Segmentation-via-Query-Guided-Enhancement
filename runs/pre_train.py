@@ -132,8 +132,8 @@ def pretrain(args):
     if torch.cuda.is_available():
         model.cuda()
 
-    optimizer = optim.Adam([{'params': model.encoder.parameters(), 'lr': args.pretrain_lr}, \
-                            {'params': model.segmenter.parameters(), 'lr': args.pretrain_lr}], \
+    optimizer = optim.Adam([{'params': model.encoder.parameters(), 'lr': args.pretrain_lr},
+                            {'params': model.segmenter.parameters(), 'lr': args.pretrain_lr}],
                            weight_decay=args.pretrain_weight_decay)
     # Set learning rate scheduler
     lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=args.pretrain_step_size, gamma=args.pretrain_gamma)
