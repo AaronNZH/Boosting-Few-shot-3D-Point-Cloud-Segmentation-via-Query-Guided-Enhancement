@@ -49,7 +49,7 @@ cd 3D-Few-Shot-Semantic-Segmentation
    The generated numpy files are stored in `./datasets/ScanNet/scenes/data` by default.
 3. To split rooms into blocks, run 
 
-    ```python ./preprocess/room2blocks.py --data_path ./datasets/ScanNet/scenes/ --dataset scannet```
+    ```python ./preprocess/room2blocks.py --data_path ./datasets/ScanNet/ --dataset scannet```
     
     One folder named `blocks_bs1_s1` will be generated under `./datasets/ScanNet/` by default. 
 
