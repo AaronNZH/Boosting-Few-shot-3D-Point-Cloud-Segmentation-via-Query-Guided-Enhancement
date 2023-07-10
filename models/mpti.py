@@ -1,3 +1,8 @@
+"""
+Adapted from https://github.com/Na-Z/attMPTI/tree/main/models/mpti.py
+Author: Zhenhua Ning, 2022
+"""
+
 import numpy as np
 import faiss
 
