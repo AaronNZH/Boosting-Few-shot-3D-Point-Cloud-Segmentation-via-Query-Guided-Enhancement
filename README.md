@@ -75,13 +75,6 @@ Note that the above scripts are used under 1-way 1-shot S<sup>0<sup/> setting on
 ## Citation
 Please cite our paper if it is helpful to your research:
 
-    @inproceedings{zhao2021few,
-      title={Few-shot 3D Point Cloud Semantic Segmentation},
-      author={Zhao, Na and Chua, Tat-Seng and Lee, Gim Hee},
-      booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
-      year={2021}
-    }
-
 
 ## Acknowledgement
-We thank [DGCNN (pytorch)](https://github.com/WangYueFt/dgcnn/tree/master/pytorch) for sharing their source code.
+We thank [DGCNN (pytorch)](https://github.com/WangYueFt/dgcnn/tree/master/pytorch) and [AttMPTI](https://github.com/Na-Z/attMPTI) for sharing their source code.
