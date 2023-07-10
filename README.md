@@ -4,7 +4,7 @@
 ## Installation
 - Install `python` --This repo is tested with `python 3.10`.
 - Install `pytorch` with CUDA -- This repo is tested with `torch 1.13.1`, `CUDA 11.7`. 
-It may work with newer versions, but that is not gauranteed.
+It may work with newer versions, but that is not guaranteed.
 	```
 	conda install pytorch==1.13.1 pytorch-cuda=11.7 -c pytorch -c nvidia
 	```
@@ -12,7 +12,7 @@ It may work with newer versions, but that is not gauranteed.
 	```
 	pip install faiss-cpu
 	```
-- Install `torch-cluster` with the corrreponding torch and cuda version, and it will take a few minutes
+- Install `torch-cluster` with the corresponding torch and cuda version, and it will take a few minutes
 	```
 	pip install torch-cluster
 	```
@@ -55,7 +55,7 @@ It may work with newer versions, but that is not gauranteed.
 
 ### Running 
 #### Training
-First, pretrain the segmentor which includes feature extractor module on the available training set:
+First, pretrain the segmentor which includes the feature extractor module on the available training set:
     
     bash ./scripts/pretrain_segmentor.sh
 
@@ -68,7 +68,7 @@ Second, train our method:
     
     bash ./scripts/eval_attMPTI.sh
 
-Note that the above scripts are used for 1-way 1-shot on S3DIS (S0). You can modified the corresponding hyperparameters to conduct experiments on other settings. 
+Note that the above scripts are used under 1-way 1-shot S<sup>0<sup/> setting on S3DIS. You can modify the corresponding hyperparameters to conduct experiments in other settings. 
 
 
 
