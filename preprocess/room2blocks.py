@@ -7,6 +7,7 @@ import os
 import glob
 import numpy as np
 
+
 # -----------------------------------------------------------------------------
 # PREPARE BLOCK DATA FOR SUPERPOINT GRAPH GENERATION
 # -----------------------------------------------------------------------------
@@ -23,7 +24,7 @@ def room2blocks(data, block_size, stride, min_npts):
     """
     assert (stride <= block_size)
 
-    xyz = data[:,:3]
+    xyz = data[:, :3]
     xyz_min = np.amin(xyz, axis=0)
     xyz -= xyz_min
     xyz_max = np.amax(xyz, axis=0)
@@ -76,7 +77,7 @@ if __name__ == '__main__':
     parser.add_argument('--stride', type=float, default=1, help='stride of sliding window for splitting rooms, '
                                                                 'stride should be not larger than block size')
     parser.add_argument('--min_npts', type=int, default=1000, help='the minimum number of points in a block,'
-                                                                  'if less than this threshold, the block is discarded')
+                                                                   'if less than this threshold, the block is discarded')
 
     args = parser.parse_args()
 
