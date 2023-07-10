@@ -86,7 +86,8 @@ if __name__ == '__main__':
     STRIDE = args.stride
     MIN_NPTS = args.min_npts
     SAVE_PATH = os.path.join(DATA_PATH, 'blocks_bs{0}_s{1}'.format(BLOCK_SIZE, STRIDE), 'data')
-    if not os.path.exists(SAVE_PATH): os.makedirs(SAVE_PATH)
+    if not os.path.exists(SAVE_PATH):
+        os.makedirs(SAVE_PATH)
 
     file_paths = glob.glob(os.path.join(DATA_PATH, 'scenes', 'data', '*.npy'))
     print('{} scenes to be split...'.format(len(file_paths)))
