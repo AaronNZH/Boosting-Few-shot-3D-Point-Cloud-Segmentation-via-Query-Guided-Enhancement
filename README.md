@@ -30,7 +30,7 @@ cd 3D-Few-Shot-Semantic-Segmentation
 1. Download [S3DIS Dataset Version 1.2](http://buildingparser.stanford.edu/dataset.html).
 2. Re-organize raw data into `npy` files by running
    ```
-   python ./preprocesscollect_s3dis_data.py --data_path $path_to_S3DIS_raw_data
+   python ./preprocess/collect_s3dis_data.py --data_path $path_to_S3DIS_raw_data
    ```
    The generated numpy files are stored in `./datasets/S3DIS/scenes/data` by default.
 3. To split rooms into blocks, run 
