@@ -68,7 +68,7 @@ Second, train our method:
     
     bash ./scripts/eval_attMPTI.sh
 
-Note that the above scripts are used under 1-way 1-shot S<sup>0<sup/> setting on S3DIS. You can modify the corresponding hyperparameters to conduct experiments in other settings. 
+Note that the above scripts are used under 1-way 1-shot S<sup>0</sup> setting on S3DIS. You can modify the corresponding hyperparameters to conduct experiments in other settings. 
 
 
 
