@@ -54,7 +54,6 @@ def collect_point_label(anno_path, out_filename, file_format='numpy'):
         exit()
 
 
-
 if __name__ == '__main__':
     import argparse
 
@@ -62,7 +61,6 @@ if __name__ == '__main__':
     parser.add_argument('--data_path', default='datasets/S3DIS/Stanford3dDataset_v1.2_Aligned_Version',
                         help='Directory to dataset')
     args = parser.parse_args()
-
 
     DATA_PATH = args.data_path
     folders = ["Area_1", "Area_2", "Area_3", "Area_4", "Area_5", "Area_6"]
@@ -85,7 +83,7 @@ if __name__ == '__main__':
                                                 if os.path.isdir(os.path.join(data_folder, o))]
 
         n_scenes = len(scene_paths)
-        if (n_scenes == 0):
+        if n_scenes == 0:
             raise ValueError('%s is empty' % data_folder)
         else:
             print('%d files are under this folder' % n_scenes)
