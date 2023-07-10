@@ -62,7 +62,7 @@ class MPTILearner(object):
         [support_x, support_y, query_x, query_y] = data
         self.model.train()
 
-        query_logits, loss = self.model(support_x, support_y, query_x, query_y, use_teacher=self.use_hr, use_bpa=self.use_bpa)
+        query_logits, loss = self.model(support_x, support_y, query_x, query_y, use_hr=self.use_hr, use_bpa=self.use_bpa)
 
         self.optimizer.zero_grad()
         loss.backward()
@@ -88,7 +88,7 @@ class MPTILearner(object):
         self.model.eval()
 
         with torch.no_grad():
-            logits, loss = self.model(support_x, support_y, query_x, query_y, use_teacher=False, use_bpa=self.use_bpa)
+            logits, loss = self.model(support_x, support_y, query_x, query_y, use_hr=False, use_bpa=self.use_bpa)
             pred = F.softmax(logits, dim=1).argmax(dim=1)
             correct = torch.eq(pred, query_y).sum().item()
             accuracy = correct / (query_y.shape[0] * query_y.shape[1])
