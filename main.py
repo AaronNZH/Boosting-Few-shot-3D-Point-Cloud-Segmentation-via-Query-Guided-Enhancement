@@ -126,10 +126,5 @@ if __name__ == '__main__':
         from runs.pre_train import pretrain
 
         pretrain(args)
-    elif args.phase == 'visualize':
-        from runs.visualize import random_visualize, visualize_Area_1, certain_class_visualize
-        # random_visualize(args)
-        # visualize_Area_1(args)
-        certain_class_visualize(args)
     else:
         raise ValueError('Please set correct phase.')
