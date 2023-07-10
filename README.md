@@ -22,13 +22,15 @@ It may work with newer versions, but that is not guaranteed.
     ```
 
 ## Usage
+```
+cd 3D-Few-Shot-Semantic-Segmentation
+```
 ### Data preparation
 #### S3DIS
 1. Download [S3DIS Dataset Version 1.2](http://buildingparser.stanford.edu/dataset.html).
 2. Re-organize raw data into `npy` files by running
    ```
-   cd ./preprocess
-   python collect_s3dis_data.py --data_path $path_to_S3DIS_raw_data
+   python ./preprocesscollect_s3dis_data.py --data_path $path_to_S3DIS_raw_data
    ```
    The generated numpy files are stored in `./datasets/S3DIS/scenes/data` by default.
 3. To split rooms into blocks, run 
@@ -42,8 +44,7 @@ It may work with newer versions, but that is not guaranteed.
 1. Download [ScanNet V2](http://www.scan-net.org/).
 2. Re-organize raw data into `npy` files by running
 	```
-	cd ./preprocess
-	python collect_scannet_data.py --data_path $path_to_ScanNet_raw_data
+	python ./preprocess/collect_scannet_data.py --data_path $path_to_ScanNet_raw_data
 	```
    The generated numpy files are stored in `./datasets/ScanNet/scenes/data` by default.
 3. To split rooms into blocks, run 
