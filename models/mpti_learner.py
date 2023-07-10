@@ -1,7 +1,3 @@
-""" MPTI with/without attention Learner for Few-shot 3D Point Cloud Semantic Segmentation
-
-Author: Zhao Na, 2020
-"""
 import os
 import torch
 from torch import optim
