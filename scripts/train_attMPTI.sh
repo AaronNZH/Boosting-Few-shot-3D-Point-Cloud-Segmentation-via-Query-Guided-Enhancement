@@ -24,17 +24,17 @@ LR=0.001
 DECAY_STEP=5000
 DECAY_RATIO=0.5
 
-N_SUBPROTOTYPES=100
+N_SUBPROTOTYPES=100  # N_SUBPROTOTYPES=150 if 2 way 5 shot
 N_TEACHER_SUBPROTOTYPES=100
 K_CONNECT=200
 SIM_FUNCTION='gaussian'
-SIGMA=1
+SIGMA=1  # SIGMA=5 if scannet
 
 args=(--phase 'mptitrain' --dataset "${DATASET}" --cvfold $SPLIT
       --data_path  "$DATA_PATH" --save_path "$SAVE_PATH"
-      --pretrain_checkpoint_path "$PRETRAIN_CHECKPOINT" --use_attention
-      --n_subprototypes $N_SUBPROTOTYPES  --k_connect $K_CONNECT
-      --dist_method "$SIM_FUNCTION" --mpti_sigma $SIGMA
+      --pretrain_checkpoint_path "$PRETRAIN_CHECKPOINT"
+      --n_subprototypes $N_SUBPROTOTYPES --n_teacher_subprototypes $N_TEACHER_SUBPROTOTYPES
+      --k_connect $K_CONNECT --dist_method "$SIM_FUNCTION" --mpti_sigma $SIGMA
       --pc_npts $NUM_POINTS --pc_attribs "$PC_ATTRIBS" --pc_augm
       --edgeconv_widths "$EDGECONV_WIDTHS" --dgcnn_k $K 
       --dgcnn_mlp_widths "$MLP_WIDTHS" --base_widths "$BASE_WIDTHS" 
