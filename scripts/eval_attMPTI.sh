@@ -11,7 +11,7 @@ MLP_WIDTHS='[512, 256]'
 K=20
 BASE_WIDTHS='[128, 64]'
 
-MODEL_CHECKPOINT='./log_s3dis/log_mpti_s3dis_S0_N1_K1_Att1'
+MODEL_CHECKPOINT='./log_s3dis/log_mpti_s3dis_S0_N1_K1'
 N_WAY=1
 K_SHOT=1
 N_QUESIES=1
@@ -20,7 +20,7 @@ N_TEST_EPISODES=200
 N_SUBPROTOTYPES=100
 K_CONNECT=200
 SIM_FUNCTION='gaussian'
-SIGMA=1
+SIGMA=1  # SIGMA=5 if scannet
 
 args=(--phase 'mptieval'  --dataset "${DATASET}" --cvfold $SPLIT
       --data_path  "$DATA_PATH" --save_path "$MODEL_CHECKPOINT"
