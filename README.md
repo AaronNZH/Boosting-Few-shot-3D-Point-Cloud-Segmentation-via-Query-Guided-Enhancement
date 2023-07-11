@@ -5,6 +5,7 @@ Created by <a href="https://github.com/AaronNZH" target="_blank">Zhenhua Ning</a
 ![teaser](framework.jpg)
 
 ## Installation
+This repo is tested on Ubuntu 18.04
 - Install `python` --This repo is tested with `python 3.10`.
 - Install `pytorch` with CUDA -- This repo is tested with `torch 1.13.1`, `CUDA 11.7`. 
 It may work with newer versions, but that is not guaranteed.
