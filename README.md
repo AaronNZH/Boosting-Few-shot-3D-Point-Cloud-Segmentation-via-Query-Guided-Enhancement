@@ -11,17 +11,9 @@ It may work with newer versions, but that is not guaranteed.
 	```
 	conda install pytorch==1.13.1 pytorch-cuda=11.7 -c pytorch -c nvidia
 	```
-- Install `faiss` with cpu version
-	```
-	pip install faiss-cpu
-	```
-- Install `torch-cluster` with the corresponding torch and cuda version, and it will take a few minutes
-	```
-	pip install torch-cluster
-	```
 - Install dependencies
     ```
-    pip install tensorboard h5py transforms3d matplotlib plyfile
+    pip install -r requirements.txt
     ```
 
 ## Usage
