@@ -18,7 +18,7 @@ It may work with newer versions, but that is not guaranteed.
 	```
 - Install dependencies
     ```
-    pip install tensorboard h5py transforms3d matplotlib
+    pip install tensorboard h5py transforms3d matplotlib PlyData
     ```
 
 ## Usage
