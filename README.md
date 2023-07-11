@@ -2,7 +2,7 @@
 Created by <a href="https://github.com/AaronNZH" target="_blank">Zhenhua Ning</a> from 
 <a href="https://www.hitsz.edu.cn/index.html" target="_blank">Harbin Institute of Technology, ShenZhen</a>
 
-![teaser](framework.pdf)
+![teaser](framework.jpg)
 
 ## Installation
 - Install `python` --This repo is tested with `python 3.10`.
