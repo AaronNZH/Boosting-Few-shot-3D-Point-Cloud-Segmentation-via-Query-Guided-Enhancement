@@ -18,7 +18,7 @@ It may work with newer versions, but that is not guaranteed.
 
 ## Usage
 ```
-cd 3D-Few-Shot-Semantic-Segmentation
+cd Boosting-Few-shot-3D-Point-Cloud-Segmentation-via-Query-Guided-Enhancement
 ```
 ### Data preparation
 #### S3DIS
