@@ -1,5 +1,7 @@
-# 3D-Few-Shot-Semantic-Segmentation
-3D Few-Shot Semantic Segmentation
+# Boosting Few-shot 3D Point Cloud Segmentation via Query-Guided Enhancement
+Created by <a href="[https://github.com/Na-Z](https://github.com/AaronNZH)" target="_blank">Zhenhua Ning</a> from Harbin Institute of Technology, ShenZhen
+
+![teaser](framework.pdf)
 
 ## Installation
 - Install `python` --This repo is tested with `python 3.10`.
