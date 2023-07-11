@@ -1,0 +1,7 @@
+faiss-cpu
+torch-cluster
+tensorboard
+h5py
+transforms3d
+matplotlib
+plyfile
