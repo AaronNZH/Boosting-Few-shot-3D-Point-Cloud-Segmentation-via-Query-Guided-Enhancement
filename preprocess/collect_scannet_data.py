@@ -31,17 +31,17 @@ def get_raw2scannet_label_map(label_mapping_file):
 
 def read_ply_xyzrgb(filename):
     """ read XYZRGB point cloud from filename PLY file """
-    assert(os.path.isfile(filename))
+    assert (os.path.isfile(filename))
     with open(filename, 'rb') as f:
         plydata = PlyData.read(f)
         num_verts = plydata['vertex'].count
         vertices = np.zeros(shape=[num_verts, 6], dtype=np.float32)
-        vertices[:,0] = plydata['vertex'].data['x']
-        vertices[:,1] = plydata['vertex'].data['y']
-        vertices[:,2] = plydata['vertex'].data['z']
-        vertices[:,3] = plydata['vertex'].data['red']
-        vertices[:,4] = plydata['vertex'].data['green']
-        vertices[:,5] = plydata['vertex'].data['blue']
+        vertices[:, 0] = plydata['vertex'].data['x']
+        vertices[:, 1] = plydata['vertex'].data['y']
+        vertices[:, 2] = plydata['vertex'].data['z']
+        vertices[:, 3] = plydata['vertex'].data['red']
+        vertices[:, 4] = plydata['vertex'].data['green']
+        vertices[:, 5] = plydata['vertex'].data['blue']
     return vertices
 
 
@@ -118,18 +118,19 @@ if __name__ == '__main__':
     DATA_PATH = args.data_path
     DST_PATH = os.path.join(ROOT_DIR, 'datasets/ScanNet')
     SAVE_PATH = os.path.join(DST_PATH, 'scenes', 'data')
-    if not os.path.exists(SAVE_PATH): os.makedirs(SAVE_PATH)
+    if not os.path.exists(SAVE_PATH):
+        os.makedirs(SAVE_PATH)
 
     meta_path = os.path.join(DST_PATH, 'meta')
     CLASS_NAMES = [x.rstrip() for x in open(os.path.join(meta_path, 'scannet_classnames.txt'))]
     label_mapping_file = os.path.join(meta_path, 'scannetv2-labels.combined.tsv')
     RAW2SCANNET = get_raw2scannet_label_map(label_mapping_file)
 
-
-    scene_paths = [os.path.join(DATA_PATH, o) for o in os.listdir(DATA_PATH) if os.path.isdir(os.path.join(DATA_PATH, o))]
+    scene_paths = [os.path.join(DATA_PATH, o) for o in os.listdir(DATA_PATH) if
+                   os.path.isdir(os.path.join(DATA_PATH, o))]
 
     n_scenes = len(scene_paths)
-    if (n_scenes == 0):
+    if n_scenes == 0:
         raise ValueError('%s is empty' % DATA_PATH)
     else:
         print('%d scenes to be processed...' % n_scenes)
@@ -137,7 +138,7 @@ if __name__ == '__main__':
     for scene_path in scene_paths:
         scene_name = os.path.basename(scene_path)
         try:
-            out_filename = scene_name+'.npy' # scene0000_00.npy
+            out_filename = scene_name + '.npy'  # scene0000_00.npy
             collect_point_label(scene_path, scene_name, os.path.join(SAVE_PATH, out_filename))
         except:
             raise ValueError('ERROR {}!!'.format(scene_path))
