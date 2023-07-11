@@ -1,5 +1,6 @@
 # Boosting Few-shot 3D Point Cloud Segmentation via Query-Guided Enhancement
-Created by <a href="[https://github.com/Na-Z](https://github.com/AaronNZH)" target="_blank">Zhenhua Ning</a> from Harbin Institute of Technology, ShenZhen
+Created by <a href="https://github.com/AaronNZH" target="_blank">Zhenhua Ning</a> from 
+<a href="https://www.hitsz.edu.cn/index.html" target="_blank">Harbin Institute of Technology, ShenZhen</a>
 
 ![teaser](framework.pdf)
 
