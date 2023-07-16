@@ -49,7 +49,6 @@ class MultiPrototypeTransductiveInference(nn.Module):
         self.k_shot = args.k_shot
         self.in_channels = args.pc_in_dim
         self.n_points = args.pc_npts
-        self.use_attention = args.use_attention
         self.n_subprototypes = args.n_subprototypes
         self.teacher_n_subprototypes = args.n_teacher_subprototypes
         self.k_connect = args.k_connect
