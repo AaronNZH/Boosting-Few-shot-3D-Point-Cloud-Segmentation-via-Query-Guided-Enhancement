@@ -74,4 +74,4 @@ Please cite our paper if it is helpful to your research:
 
 
 ## Acknowledgement
-We thank [DGCNN (pytorch)](https://github.com/WangYueFt/dgcnn/tree/master/pytorch) and [AttMPTI](https://github.com/Na-Z/attMPTI) for sharing their source code.
+We thank [AttMPTI](https://github.com/Na-Z/attMPTI) for sharing their source code.
