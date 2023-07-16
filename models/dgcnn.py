@@ -1,22 +1,17 @@
-"""DGCNN as Backbone to extract point-level features
-   Adapted from https://github.com/WangYueFt/dgcnn/blob/master/pytorch/model.py
-   Author: Zhao Na, 2020
+"""
+DGCNN as Backbone to extract point-level features
+Adapted from https://github.com/WangYueFt/dgcnn/blob/master/pytorch/model.py
+Author: Zhao Na, 2020
 """
 
-import os
-import sys
-import copy
-import math
-import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 
 def knn(x, k):
-    inner = -2 * torch.matmul(x.transpose(2, 1), x) #(B,N,N)
-    xx = torch.sum(x ** 2, dim=1, keepdim=True) #(B,1,N)
-    pairwise_distance = -xx - inner - xx.transpose(2, 1) #(B,N,N)
+    inner = -2 * torch.matmul(x.transpose(2, 1), x)  # (B,N,N)
+    xx = torch.sum(x ** 2, dim=1, keepdim=True)  # (B,1,N)
+    pairwise_distance = -xx - inner - xx.transpose(2, 1)  # (B,N,N)
 
     idx = pairwise_distance.topk(k=k, dim=-1)[1]  # (B,N,k)
     return idx
@@ -34,10 +29,10 @@ def get_edge_feature(x, K=20, idx=None):
     B, C, N = x.size()
     if idx is None:
         idx = knn(x, k=K)  # (batch_size, num_points, k)
-    central_feat = x.unsqueeze(-1).expand(-1,-1,-1,K)
-    idx = idx.unsqueeze(1).expand(-1, C, -1, -1).contiguous().view(B,C,N*K)
-    knn_feat = torch.gather(x, dim=2, index=idx).contiguous().view(B,C,N,K)
-    edge_feat = torch.cat((knn_feat-central_feat, central_feat), dim=1)
+    central_feat = x.unsqueeze(-1).expand(-1, -1, -1, K)
+    idx = idx.unsqueeze(1).expand(-1, C, -1, -1).contiguous().view(B, C, N * K)
+    knn_feat = torch.gather(x, dim=2, index=idx).contiguous().view(B, C, N, K)
+    edge_feat = torch.cat((knn_feat - central_feat, central_feat), dim=1)
     return edge_feat
 
 
@@ -47,7 +42,7 @@ class conv2d(nn.Module):
         self.layer_dims = layer_dims
         layers = []
         for i in range(len(layer_dims)):
-            in_dim = in_feat if i==0 else layer_dims[i-1]
+            in_dim = in_feat if i == 0 else layer_dims[i - 1]
             out_dim = layer_dims[i]
             layers.append(nn.Conv2d(in_dim, out_dim, kernel_size=1, bias=bias))
             if batch_norm:
@@ -66,7 +61,7 @@ class conv1d(nn.Module):
         self.layer_dims = layer_dims
         layers = []
         for i in range(len(layer_dims)):
-            in_dim = in_feat if i==0 else layer_dims[i-1]
+            in_dim = in_feat if i == 0 else layer_dims[i - 1]
             out_dim = layer_dims[i]
             layers.append(nn.Conv1d(in_dim, out_dim, kernel_size=1, bias=bias))
             if batch_norm:
@@ -89,6 +84,7 @@ class DGCNN(nn.Module):
       k: number of neighbors
       conv_aggr: neighbor information aggregation method, Option:['add', 'mean', 'max', None]
     """
+
     def __init__(self, edgeconv_widths, mlp_widths, nfeat, k=20, return_edgeconvs=False):
         super(DGCNN, self).__init__()
         self.n_edgeconv = len(edgeconv_widths)
@@ -97,10 +93,10 @@ class DGCNN(nn.Module):
 
         self.edge_convs = nn.ModuleList()
         for i in range(self.n_edgeconv):
-            if i==0:
-                in_feat = nfeat*2
+            if i == 0:
+                in_feat = nfeat * 2
             else:
-                in_feat = edgeconv_widths[i-1][-1]*2
+                in_feat = edgeconv_widths[i - 1][-1] * 2
 
             self.edge_convs.append(conv2d(in_feat, edgeconv_widths[i]))
 
