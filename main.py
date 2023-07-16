@@ -10,10 +10,6 @@ import torch
 
 
 if __name__ == '__main__':
-    random.seed(321)
-    torch.manual_seed(321)
-    torch.cuda.manual_seed(321)
-
     parser = argparse.ArgumentParser()
 
     # data
