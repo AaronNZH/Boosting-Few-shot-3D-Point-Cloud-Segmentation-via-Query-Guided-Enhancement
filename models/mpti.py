@@ -68,7 +68,7 @@ class MultiPrototypeTransductiveInference(nn.Module):
         self.cross_bg_proj = nn.Sequential(nn.Linear(self.feat_dim, self.feat_dim // 2),
                                            nn.ReLU(inplace=True),
                                            nn.Dropout(0.2),
-                                           nn.Linear(self.feat_dim//2, self.feat_dim),
+                                           nn.Linear(self.feat_dim // 2, self.feat_dim),
                                            nn.Sigmoid())
 
     def forward(self, support_x, support_y, query_x, query_y, use_hr=False, use_bpa=False):
