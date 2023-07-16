@@ -143,7 +143,6 @@ class MultiPrototypeTransductiveInference(nn.Module):
         if use_hr:
             teacher_pred_loss = self.computeCrossEntropyLoss(teacher_pred, query_y)
             distill_loss = self.get_distill_loss(query_pred, teacher_pred, query_y, tau=1)
-            # we found that the training process can be more stable without query pred loss, since it is contradictory to distll loss
             loss = teacher_pred_loss + distill_loss
 
         return query_pred, loss
