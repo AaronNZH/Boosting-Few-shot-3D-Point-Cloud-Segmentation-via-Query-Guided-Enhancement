@@ -72,7 +72,7 @@ class MultiPrototypeTransductiveInference(nn.Module):
                                            nn.Linear(self.feat_dim//2, self.feat_dim),
                                            nn.Sigmoid())
 
-    def forward(self, support_x, support_y, query_x, query_y, use_hr=False, use_bpa=True):
+    def forward(self, support_x, support_y, query_x, query_y, use_hr=False, use_bpa=False):
         """
         Args:
             support_x: support point clouds with shape (n_way, k_shot, in_channels, num_points)
