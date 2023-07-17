@@ -91,17 +91,6 @@ def test_few_shot(test_loader, learner, logger, test_classes):
         query_pred, loss, accuracy = learner.test(data)
         total_loss += loss.detach().item()
 
-        # Count the proportion of other foreground categories that are incorrectly identified
-        # fg_gt_mask = query_label != 0
-        # fg_gt = query_label[fg_gt_mask]
-        # fg_gt_pred = query_pred[fg_gt_mask].cpu()
-        # fg_other_fg += (torch.logical_not(torch.eq(fg_gt_pred, fg_gt)) * torch.logical_not(torch.eq(fg_gt_pred, 0))).view(-1).sum().item()
-
-        query_pred = query_pred.cpu()
-        fg_wrong_1 += (torch.eq(query_pred, 0) * torch.logical_not(torch.eq(query_label, 0))).view(-1).sum().item()
-        fg_wrong_2 += (torch.logical_not(torch.eq(query_pred, 0)) * torch.eq(query_label, 0)).view(-1).sum().item()
-        total_wrong += torch.logical_not(torch.eq(query_pred, query_label)).view(-1).sum().item()
-
         if (batch_idx + 1) % 50 == 0:
             logger.cprint('[Eval] Iter: %d | Loss: %.4f | Accuracy: %.4f | %s' % (
             batch_idx + 1, loss.detach().item(), accuracy, str(datetime.now())))
@@ -113,9 +102,6 @@ def test_few_shot(test_loader, learner, logger, test_classes):
 
     mean_loss = total_loss / len(test_loader)
     mean_IoU = evaluate_metric(logger, predicted_label_total, gt_label_total, label2class_total, test_classes)
-
-    logger.cprint(f"{fg_wrong_1 / total_wrong}, {fg_wrong_2 / total_wrong}")
-    # print(fg_other_fg / total_wrong)
 
     return mean_loss, mean_IoU
 
