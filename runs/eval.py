@@ -76,12 +76,6 @@ def test_few_shot(test_loader, learner, logger, test_classes):
     gt_label_total = []
     label2class_total = []
 
-    fg_wrong_1 = 0
-    fg_wrong_2 = 0
-    total_wrong = 0
-
-    # fg_other_fg = 0
-
     for batch_idx, (data, sampled_classes) in enumerate(test_loader):
         query_label = data[-1]
 
