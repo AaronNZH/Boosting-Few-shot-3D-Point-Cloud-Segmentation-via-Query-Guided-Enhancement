@@ -93,9 +93,9 @@ if __name__ == '__main__':
                         help='Number of nearest neighbors to construct local-constrained affinity matrix')
     parser.add_argument('--mpti_sigma', type=float, default=1., help='hyeprparameter in gaussian similarity function')
 
-    # parser.add_argument('--onehot', type=str, default='cosinetrans')
     parser.add_argument('--dropout_ratio', type=float, default=0.2)
 
+    # Query-Guided Enhancement Modules
     parser.add_argument('--use_bpa', action='store_true', help='Use BPA module')
     parser.add_argument('--use_hr', action='store_true', help='Use HR module')
 
