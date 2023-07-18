@@ -33,7 +33,7 @@ class MPTILearner(object):
             # set learning rate scheduler
             # self.lr_scheduler = optim.lr_scheduler.StepLR(self.optimizer, step_size=args.step_size,
             #                                               gamma=args.gamma)
-            self.lr_scheduler = optim.lr_scheduler.CosineAnnealingLR(self.optimizer, args.cosine_Tmax)
+            self.lr_scheduler = optim.lr_scheduler.CosineAnnealingLR(self.optimizer, args.cosine_T_max)
             if args.model_checkpoint_path is None:
                 # load pretrained model for point cloud encoding
                 self.model = load_pretrain_checkpoint(self.model, args.pretrain_checkpoint_path)
