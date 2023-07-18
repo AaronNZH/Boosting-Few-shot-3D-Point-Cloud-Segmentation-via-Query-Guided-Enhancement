@@ -43,6 +43,7 @@ if __name__ == '__main__':
                         help='Model (eg. protoNet or MPTI) learning rate [default: 0.001]')
     parser.add_argument('--step_size', type=int, default=5000, help='Iterations of learning rate decay')
     parser.add_argument('--gamma', type=float, default=0.5, help='Multiplicative factor of learning rate decay')
+    parser.add_argument('--cosine_T_max', type=int, default=5000, help='T_max of cosine annealing schedule)
 
     parser.add_argument('--pretrain_lr', type=float, default=0.001, help='pretrain learning rate [default: 0.001]')
     parser.add_argument('--pretrain_weight_decay', type=float, default=0., help='weight decay for regularization')
