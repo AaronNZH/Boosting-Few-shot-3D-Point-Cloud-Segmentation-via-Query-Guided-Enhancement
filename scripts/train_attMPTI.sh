@@ -20,9 +20,10 @@ N_TEST_EPISODES=200
 
 NUM_ITERS=40000
 EVAL_INTERVAL=2000
-LR=0.0006
-DECAY_STEP=6000
-DECAY_RATIO=0.5
+LR=0.001
+# DECAY_STEP=5000
+# DECAY_RATIO=0.5
+COSINE_T_MAX=5000
 
 N_SUBPROTOTYPES=100  # N_SUBPROTOTYPES=150 if 2 way 5 shot
 N_TEACHER_SUBPROTOTYPES=100
@@ -39,7 +40,7 @@ args=(--phase 'mptitrain' --dataset "${DATASET}" --cvfold $SPLIT
       --edgeconv_widths "$EDGECONV_WIDTHS" --dgcnn_k $K 
       --dgcnn_mlp_widths "$MLP_WIDTHS" --base_widths "$BASE_WIDTHS" 
       --n_iters $NUM_ITERS --eval_interval $EVAL_INTERVAL --batch_size 1
-      --lr $LR  --step_size $DECAY_STEP --gamma $DECAY_RATIO
+      --lr $LR  --cosien_T_max $COSINE_T_MAX
       --n_way $N_WAY --k_shot $K_SHOT --n_queries $N_QUERIES --n_episode_test $N_TEST_EPISODES
       --use_bpa --use_hr)
 
