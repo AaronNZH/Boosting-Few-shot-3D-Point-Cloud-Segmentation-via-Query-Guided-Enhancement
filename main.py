@@ -17,9 +17,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     # data
-    parser.add_argument('--phase', type=str, default='graphtrain', choices=['pretrain', 'finetune',
-                                                                            'prototrain', 'protoeval',
-                                                                            'mptitrain', 'mptieval', 'visualize'])
+    parser.add_argument('--phase', type=str, default='graphtrain', choices=['pretrain', 'mptitrain', 'mptieval'])
     parser.add_argument('--dataset', type=str, default='s3dis', help='Dataset name: s3dis|scannet')
     parser.add_argument('--cvfold', type=int, default=0, help='Fold left-out for testing in leave-one-out setting '
                                                               'Options:{0,1}')
