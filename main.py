@@ -112,12 +112,7 @@ if __name__ == '__main__':
         from runs.mpti_train import train
 
         train(args)
-    elif args.phase == 'prototrain':
-        args.log_dir = args.save_path + 'log_proto_%s_S%d_N%d_K%d' % (args.dataset, args.cvfold, args.n_way, args.k_shot)
-        from runs.proto_train import train
-
-        train(args)
-    elif args.phase == 'mptieval' or args.phase == 'protoeval':
+    elif args.phase == 'mptieval':
         args.log_dir = args.model_checkpoint_path
         from runs.eval import eval
 
