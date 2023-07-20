@@ -52,6 +52,8 @@ cd Boosting-Few-shot-3D-Point-Cloud-Segmentation-via-Query-Guided-Enhancement
 
 ### Running 
 #### Training
+**We have prepared the pretrain and 1 way 1shot S<sup>0</sup> checkpoints in the log_s3dis and log_scannet folders.**
+
 First, pretrain the segmentor which includes the feature extractor module on the available training set:
     
     bash ./scripts/pretrain_segmentor.sh
