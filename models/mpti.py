@@ -142,6 +142,7 @@ class MultiPrototypeTransductiveInference(nn.Module):
         if use_hr:
             teacher_pred_loss = self.computeCrossEntropyLoss(teacher_pred, query_y)
             distill_loss = self.get_distill_loss(query_pred, teacher_pred, query_y, tau=1)
+            # We observed that training without student CE loss is more stable
             loss = teacher_pred_loss + distill_loss
 
         return query_pred, loss
