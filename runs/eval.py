@@ -1,8 +1,7 @@
 """Evaluating functions for Few-shot 3D Point Cloud Semantic Segmentation
-
 Author: Zhao Na, 2020
 """
-import os
+
 import time
 from datetime import datetime
 
@@ -12,7 +11,6 @@ from torch.utils.data import DataLoader
 
 from dataloaders.loader import MyTestDataset, batch_test_task_collate
 from models.mpti_learner import MPTILearner
-from models.proto_learner import ProtoLearner
 from utils.cuda_util import cast_cuda
 from utils.logger import init_logger
 
@@ -102,11 +100,7 @@ def test_few_shot(test_loader, learner, logger, test_classes):
 
 def eval(args):
     logger = init_logger(args.log_dir, args)
-
-    if args.phase == 'protoeval':
-        learner = ProtoLearner(args, mode='test')
-    elif args.phase == 'mptieval':
-        learner = MPTILearner(args, mode='test')
+    learner = MPTILearner(args, mode='test')
 
     # Init dataset, dataloader
     TEST_DATASET = MyTestDataset(args.data_path, args.dataset, cvfold=args.cvfold,
