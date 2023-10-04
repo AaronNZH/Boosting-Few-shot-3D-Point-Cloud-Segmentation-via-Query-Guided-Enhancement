@@ -69,7 +69,7 @@ class MultiHeadAttention(nn.Module):
         self.dropout = nn.Dropout(att_dropout)
 
         if self.use_proj:
-            self.proj = nn.Sequential(nn.Linear(self.out_channel//2, self.out_channe//2),
+            self.proj = nn.Sequential(nn.Linear(self.out_channel//2, self.out_channel//2),
                                       nn.ReLU(inplace=True),
                                       nn.Linear(self.out_channel//2, self.out_channel))
 
