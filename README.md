@@ -74,13 +74,12 @@ Note that the above scripts are used under 1-way 1-shot S<sup>0</sup> setting on
 ## Citation
 Please cite our paper if it is helpful to your research:
 ```
-@misc{ning2023boosting,
-      title={Boosting Few-shot 3D Point Cloud Segmentation via Query-Guided Enhancement}, 
-      author={Zhenhua Ning and Zhuotao Tian and Guangming Lu and Wenjie Pei},
-      year={2023},
-      eprint={2308.03177},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV}
+@inproceedings{10.1145/3581783.3612287,
+author = {Ning, Zhenhua and Tian, Zhuotao and Lu, Guangming and Pei, Wenjie},
+title = {Boosting Few-Shot 3D Point Cloud Segmentation via Query-Guided Enhancement},
+booktitle = {Proceedings of the 31st ACM International Conference on Multimedia},
+year = {2023},
+doi = {10.1145/3581783.3612287},
 }
 ```
 
