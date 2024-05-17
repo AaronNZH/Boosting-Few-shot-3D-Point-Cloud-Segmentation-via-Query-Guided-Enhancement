@@ -1,6 +1,6 @@
 # Boosting Few-shot 3D Point Cloud Segmentation via Query-Guided Enhancement
 
-<a href="https://arxiv.org/abs/2308.03177" target="_blank">[Paper]</a>
+<a href="https://arxiv.org/abs/2308.03177" target="_blank">[Arxiv]</a>
 
 ![teaser](framework.jpg)
 
